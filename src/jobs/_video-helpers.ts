@@ -1,6 +1,7 @@
 import { eq, and, isNotNull } from "drizzle-orm";
 import { db } from "../db";
 import { videos } from "../db/schema";
+import { ideasQueue } from "./queue";
 
 /**
  * Đảm bảo có 1 record video cho script. KHÔNG reset bất kỳ field nào nếu đã tồn tại
@@ -51,14 +52,15 @@ export function resetVideoAssets(scriptId: string) {
 
 /**
  * Sau khi 1 asset (voice / broll) đã được set xong, kiểm tra xem cả 2 đã đủ chưa.
- * Race-safe: chỉ update status khi vẫn đang ở generating_assets và cả 2 URL có giá trị.
+ * Race-safe: dùng RETURNING để đảm bảo chỉ enqueue assemble đúng 1 lần (job nào
+ * thắng update transition thì job đó queue tiếp).
  *
- * Phase 4 (no avatar): chỉ cần voice + broll → set pending_review.
- * Phase 5 sẽ thay bằng "assembling" + queue Submagic job.
+ * Phase 5: voice + broll đủ → status='assembling' + queue assemble-video job.
  */
-export function tryMarkAssetsReady(videoId: string) {
-  db.update(videos)
-    .set({ status: "pending_review" })
+export async function tryMarkAssetsReady(videoId: string): Promise<void> {
+  const updated = db
+    .update(videos)
+    .set({ status: "assembling" })
     .where(
       and(
         eq(videos.id, videoId),
@@ -67,7 +69,16 @@ export function tryMarkAssetsReady(videoId: string) {
         isNotNull(videos.brollUrls),
       ),
     )
-    .run();
+    .returning({ id: videos.id })
+    .all();
+
+  if (updated.length === 0) return;
+
+  await ideasQueue.add(
+    "assemble-video",
+    { type: "assemble-video", data: { videoId } },
+    { jobId: `assemble_${videoId}_${Date.now()}` },
+  );
 }
 
 export function getVideoByScriptId(scriptId: string) {

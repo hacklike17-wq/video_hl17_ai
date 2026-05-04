@@ -24,6 +24,7 @@ const schema = z.object({
   APIFY_TIKTOK_ACTOR: z.string().default("clockworks/tiktok-scraper"),
   PEXELS_API_KEY: z.string().optional(),
   SUBMAGIC_API_KEY: z.string().optional(),
+  SUBMAGIC_TEMPLATE_NAME: z.string().default("Hormozi 1"),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),

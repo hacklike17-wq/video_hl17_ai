@@ -47,7 +47,7 @@ export async function runGenerateVoice(opts: { scriptId: string }) {
     const upload = await uploadAudio({ buffer: mp3, filename });
 
     db.update(videos).set({ voiceUrl: upload.url }).where(eq(videos.id, videoId)).run();
-    tryMarkAssetsReady(videoId);
+    await tryMarkAssetsReady(videoId);
 
     db.update(jobsLog)
       .set({

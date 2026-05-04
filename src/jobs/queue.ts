@@ -48,9 +48,15 @@ export type FetchBrollJob = {
   data: { scriptId: string };
 };
 
+export type AssembleVideoJob = {
+  type: "assemble-video";
+  data: { videoId: string };
+};
+
 export type IdeaJob =
   | CrawlIdeasJob
   | ScoreIdeaJob
   | GenerateScriptJob
   | GenerateVoiceJob
-  | FetchBrollJob;
+  | FetchBrollJob
+  | AssembleVideoJob;

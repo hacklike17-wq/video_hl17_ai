@@ -14,7 +14,8 @@ RUN npm run build
 RUN npm run worker:build
 
 FROM node:20-alpine AS runner
-RUN apk add --no-cache libc6-compat
+# ffmpeg required by the assemble-video worker job (concat b-rolls + mux audio)
+RUN apk add --no-cache libc6-compat ffmpeg
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 RUN addgroup -S app && adduser -S -G app app

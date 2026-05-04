@@ -6,6 +6,7 @@ import { runScoreIdea } from "./score-idea";
 import { runGenerateScript } from "./generate-script";
 import { runGenerateVoice } from "./generate-voice";
 import { runFetchBroll } from "./fetch-broll";
+import { runAssembleVideo } from "./assemble-video";
 
 const ideasWorker = new Worker<IdeaJob>(
   QUEUE_NAMES.ideas,
@@ -26,6 +27,8 @@ const ideasWorker = new Worker<IdeaJob>(
         return runGenerateVoice(payload.data);
       case "fetch-broll":
         return runFetchBroll(payload.data);
+      case "assemble-video":
+        return runAssembleVideo(payload.data);
       default: {
         const _never: never = payload;
         throw new Error(`Unknown job type: ${JSON.stringify(_never)}`);

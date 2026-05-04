@@ -60,7 +60,7 @@ export async function runFetchBroll(opts: { scriptId: string }) {
     }
 
     db.update(videos).set({ brollUrls: urls }).where(eq(videos.id, videoId)).run();
-    tryMarkAssetsReady(videoId);
+    await tryMarkAssetsReady(videoId);
 
     db.update(jobsLog)
       .set({
