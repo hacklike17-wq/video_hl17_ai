@@ -33,4 +33,9 @@ export type ScoreIdeaJob = {
   data: { ideaId: string };
 };
 
-export type IdeaJob = CrawlIdeasJob | ScoreIdeaJob;
+export type GenerateScriptJob = {
+  type: "generate-script";
+  data: { ideaId: string };
+};
+
+export type IdeaJob = CrawlIdeasJob | ScoreIdeaJob | GenerateScriptJob;

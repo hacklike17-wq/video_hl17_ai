@@ -10,6 +10,7 @@ import {
   rescoreIdeaAction,
   deleteIdeaAction,
 } from "@/app/(app)/ideas/actions";
+import { generateScriptForIdeaAction } from "@/app/(app)/scripts/actions";
 
 export function IdeaDetailActions({ idea }: { idea: Idea }) {
   const router = useRouter();
@@ -18,12 +19,13 @@ export function IdeaDetailActions({ idea }: { idea: Idea }) {
 
   const generate = () => {
     start(async () => {
-      const r = await setIdeaStatusAction(idea.id, "approved");
-      setMsg(
-        r.ok
-          ? "Đã chuyển sang trạng thái Đã duyệt. Tính năng tự sinh kịch bản sẽ có ở giai đoạn 3."
-          : `Lỗi: ${r.error}`,
-      );
+      const r = await generateScriptForIdeaAction(idea.id);
+      if (r.ok) {
+        setMsg("Đã đưa vào hàng đợi — kịch bản sẽ xuất hiện trong tab 'Kịch bản' sau ~15-20 giây.");
+        setTimeout(() => router.push("/scripts"), 1500);
+      } else {
+        setMsg(`Lỗi: ${r.error}`);
+      }
     });
   };
 

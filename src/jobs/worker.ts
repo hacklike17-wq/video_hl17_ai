@@ -3,6 +3,7 @@ import { redis } from "../lib/redis";
 import { QUEUE_NAMES, type IdeaJob } from "./queue";
 import { runCrawlIdeas } from "./crawl-ideas";
 import { runScoreIdea } from "./score-idea";
+import { runGenerateScript } from "./generate-script";
 
 const ideasWorker = new Worker<IdeaJob>(
   QUEUE_NAMES.ideas,
@@ -17,6 +18,8 @@ const ideasWorker = new Worker<IdeaJob>(
         return runCrawlIdeas(payload.data);
       case "score-idea":
         return runScoreIdea(payload.data.ideaId);
+      case "generate-script":
+        return runGenerateScript(payload.data);
       default: {
         const _never: never = payload;
         throw new Error(`Unknown job type: ${JSON.stringify(_never)}`);

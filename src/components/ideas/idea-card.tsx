@@ -7,6 +7,7 @@ import type { Idea } from "@/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { setIdeaStatusAction, deleteIdeaAction } from "@/app/(app)/ideas/actions";
+import { generateScriptForIdeaAction } from "@/app/(app)/scripts/actions";
 
 const PLATFORM_ICON = {
   tiktok: Music2,
@@ -32,7 +33,12 @@ export function IdeaCard({ idea }: { idea: Idea }) {
   const advance = () => {
     if (!next) return;
     startTransition(async () => {
-      await setIdeaStatusAction(idea.id, next.next);
+      // Nếu chuyển từ 'approved' → 'script_gen' thì gọi action sinh kịch bản (queue job)
+      if (idea.status === "approved" && next.next === "script_gen") {
+        await generateScriptForIdeaAction(idea.id);
+      } else {
+        await setIdeaStatusAction(idea.id, next.next);
+      }
     });
   };
   const reject = () => {
