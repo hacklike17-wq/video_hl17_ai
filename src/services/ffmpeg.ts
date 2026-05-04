@@ -9,13 +9,28 @@ function run(cmd: string, args: string[]): Promise<{ stdout: string; stderr: str
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
-    let stderr = "";
+    // Cap stderr buffer to avoid OOM-by-logspam from chatty ffmpeg
+    const stderrTail: string[] = [];
+    const MAX_STDERR_LINES = 50;
     p.stdout.on("data", (d) => (stdout += d.toString()));
-    p.stderr.on("data", (d) => (stderr += d.toString()));
+    p.stderr.on("data", (d) => {
+      const lines = d.toString().split("\n");
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        stderrTail.push(line);
+        while (stderrTail.length > MAX_STDERR_LINES) stderrTail.shift();
+      }
+    });
     p.on("error", reject);
-    p.on("close", (code) => {
+    p.on("close", (code, signal) => {
+      const stderr = stderrTail.join("\n");
       if (code === 0) resolve({ stdout, stderr });
-      else reject(new Error(`${cmd} exit ${code}: ${stderr.slice(-500)}`));
+      else
+        reject(
+          new Error(
+            `${cmd} exit code=${code} signal=${signal ?? "none"}: ${stderr.slice(-600)}`,
+          ),
+        );
     });
   });
 }
@@ -65,8 +80,10 @@ export async function assembleVideo(opts: {
   height?: number;
   fps?: number;
 }): Promise<void> {
-  const w = opts.width ?? 1080;
-  const h = opts.height ?? 1920;
+  // Default 720x1280 portrait — enough for short-form social video and
+  // 2.25x cheaper to encode than 1080x1920 on a 2-vCPU VPS.
+  const w = opts.width ?? 720;
+  const h = opts.height ?? 1280;
   const fps = opts.fps ?? 30;
   if (opts.brollPaths.length === 0) throw new Error("Không có b-roll để ghép");
 
@@ -100,9 +117,13 @@ export async function assembleVideo(opts: {
     "-c:v",
     "libx264",
     "-preset",
-    "veryfast",
+    "ultrafast",
+    "-tune",
+    "fastdecode",
     "-crf",
-    "23",
+    "26",
+    "-threads",
+    "2",
     "-c:a",
     "aac",
     "-b:a",
