@@ -1,5 +1,12 @@
-import type { Idea } from "@/db/schema";
+import type { Idea, Script } from "@/db/schema";
 import { IdeaCard } from "./idea-card";
+
+export type IdeaProgress = {
+  scriptId?: string;
+  scriptStatus?: Script["status"];
+  jobStatus?: "queued" | "running" | "success" | "failed";
+  jobError?: string | null;
+};
 
 const COLUMNS: { key: Idea["status"]; label: string; tint: string }[] = [
   { key: "idea", label: "Ý tưởng", tint: "border-yellow-500/30" },
@@ -9,7 +16,13 @@ const COLUMNS: { key: Idea["status"]; label: string; tint: string }[] = [
   { key: "rejected", label: "Đã từ chối", tint: "border-red-500/30" },
 ];
 
-export function KanbanBoard({ ideas }: { ideas: Idea[] }) {
+export function KanbanBoard({
+  ideas,
+  progressMap = {},
+}: {
+  ideas: Idea[];
+  progressMap?: Record<string, IdeaProgress>;
+}) {
   const grouped = COLUMNS.reduce<Record<Idea["status"], Idea[]>>(
     (acc, col) => {
       acc[col.key] = [];
@@ -36,7 +49,7 @@ export function KanbanBoard({ ideas }: { ideas: Idea[] }) {
             </div>
             <div className="space-y-2">
               {items.map((idea) => (
-                <IdeaCard key={idea.id} idea={idea} />
+                <IdeaCard key={idea.id} idea={idea} progress={progressMap[idea.id]} />
               ))}
               {items.length === 0 && (
                 <div className="rounded-md border border-dashed border-muted-foreground/20 p-4 text-center text-xs text-muted-foreground">
