@@ -64,7 +64,7 @@ export async function crawlIdeasNowAction(): Promise<ActionResult> {
     const job = await ideasQueue.add(
       "crawl-ideas",
       { type: "crawl-ideas", data: { limit: 20 } },
-      { jobId: `crawl:${Date.now()}` },
+      { jobId: `crawl_${Date.now()}` },
     );
     revalidatePath("/jobs");
     return { ok: true, message: `Đã queue job: ${job.id}` };
@@ -78,7 +78,7 @@ export async function rescoreIdeaAction(id: string): Promise<ActionResult> {
     await ideasQueue.add(
       "score-idea",
       { type: "score-idea", data: { ideaId: id } },
-      { jobId: `score:${id}:${Date.now()}` },
+      { jobId: `score_${id}_${Date.now()}` },
     );
     return { ok: true, message: "Đã queue rescore" };
   } catch (err) {

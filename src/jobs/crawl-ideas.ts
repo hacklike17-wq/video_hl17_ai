@@ -55,7 +55,7 @@ export async function runCrawlIdeas(opts: { brandId?: string; limit?: number }) 
       await ideasQueue.add(
         "score-idea",
         { type: "score-idea", data: { ideaId: inserted_idea.id } },
-        { jobId: `score:${inserted_idea.id}` },
+        { jobId: `score_${inserted_idea.id}` },
       );
     }
 
