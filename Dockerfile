@@ -11,6 +11,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
+RUN npm run worker:build
 
 FROM node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat
@@ -23,9 +24,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=app:app /app/.next/standalone ./
 COPY --from=builder --chown=app:app /app/.next/static ./.next/static
 
-# Drizzle migrations + worker source (for tsx)
+# Drizzle migrations + bundled worker
 COPY --from=builder --chown=app:app /app/src/db ./src/db
-COPY --from=builder --chown=app:app /app/src/jobs ./src/jobs
+COPY --from=builder --chown=app:app /app/dist ./dist
 COPY --from=builder --chown=app:app /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
