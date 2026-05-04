@@ -1,0 +1,34 @@
+node_modules/
+.next/
+out/
+dist/
+.turbo/
+
+# data
+data/
+*.db
+*.db-journal
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# misc
+.cache/
+coverage/
+next-env.d.ts
+tsconfig.tsbuildinfo

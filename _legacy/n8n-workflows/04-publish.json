@@ -1,0 +1,117 @@
+{
+  "name": "04 — Publish to Buffer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "publish-video",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook (Video Approved)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Videos", "mode": "name" },
+        "id": "={{ $json.body.videoId }}"
+      },
+      "id": "get-video",
+      "name": "Get Video Record",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [420, 300],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.bufferapp.com/2/profiles.json?access_token={{ $env.BUFFER_ACCESS_TOKEN }}"
+      },
+      "id": "get-profiles",
+      "name": "Get Buffer Profiles",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter to TikTok + Instagram + YouTube channels\nconst profiles = $input.first().json;\nconst targets = profiles.filter(p => ['tiktok', 'instagram', 'youtube'].some(s => p.service.includes(s)));\nreturn targets.map(p => ({ json: { profile_id: p.id, service: p.service } }));"
+      },
+      "id": "filter-channels",
+      "name": "Filter Target Channels",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bufferapp.com/2/updates/create.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/x-www-form-urlencoded" }]
+        },
+        "sendBody": true,
+        "specifyBody": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "access_token", "value": "={{ $env.BUFFER_ACCESS_TOKEN }}" },
+            { "name": "profile_ids[]", "value": "={{ $json.profile_id }}" },
+            { "name": "text", "value": "={{ $('Get Video Record').item.json.fields.caption }}" },
+            { "name": "media[video]", "value": "={{ $('Get Video Record').item.json.fields.final_url }}" },
+            { "name": "scheduled_at", "value": "={{ $('Get Video Record').item.json.fields.scheduled_at }}" }
+          ]
+        }
+      },
+      "id": "buffer-create",
+      "name": "Schedule on Buffer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Videos", "mode": "name" },
+        "id": "={{ $('Get Video Record').item.json.id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": { "status": "Scheduled" }
+        }
+      },
+      "id": "update-video",
+      "name": "Mark Video: Scheduled",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [1300, 300],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"scheduled_count\": {{ $items().length }} }"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1520, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (Video Approved)": { "main": [[{ "node": "Get Video Record", "type": "main", "index": 0 }]] },
+    "Get Video Record": { "main": [[{ "node": "Get Buffer Profiles", "type": "main", "index": 0 }]] },
+    "Get Buffer Profiles": { "main": [[{ "node": "Filter Target Channels", "type": "main", "index": 0 }]] },
+    "Filter Target Channels": { "main": [[{ "node": "Schedule on Buffer", "type": "main", "index": 0 }]] },
+    "Schedule on Buffer": { "main": [[{ "node": "Mark Video: Scheduled", "type": "main", "index": 0 }]] },
+    "Mark Video: Scheduled": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

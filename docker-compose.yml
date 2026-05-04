@@ -1,0 +1,62 @@
+services:
+  app:
+    build: .
+    container_name: video_ai_app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/app.db
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks: [web]
+
+  worker:
+    build: .
+    container_name: video_ai_worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/app.db
+      - REDIS_URL=redis://redis:6379
+    command: ["npx", "tsx", "src/jobs/worker.ts"]
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks: [web]
+
+  redis:
+    image: redis:7-alpine
+    container_name: video_ai_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks: [web]
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: video_ai_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks: [web]
+
+volumes:
+  redis_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  web:

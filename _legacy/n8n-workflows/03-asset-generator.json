@@ -1,0 +1,230 @@
+{
+  "name": "03 — Asset Kick-Off (async, fires Argil + ElevenLabs + Pexels)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-assets",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook (Script Approved)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 400]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Scripts", "mode": "name" },
+        "id": "={{ $json.body.scriptId }}"
+      },
+      "id": "get-script",
+      "name": "Get Script",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [420, 400],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Videos", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "script_id": "={{ [$('Get Script').item.json.id] }}",
+            "status": "Generating Assets"
+          }
+        },
+        "options": { "typecast": true }
+      },
+      "id": "create-video",
+      "name": "Create Video Record (placeholder)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [640, 400],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.elevenlabs.io/v1/text-to-speech/{{ $env.ELEVENLABS_VOICE_ID }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "xi-api-key", "value": "={{ $env.ELEVENLABS_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Accept", "value": "audio/mpeg" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $('Get Script').item.json.fields.setup }} {{ $('Get Script').item.json.fields.body }}\",\n  \"model_id\": \"eleven_multilingual_v2\",\n  \"voice_settings\": { \"stability\": 0.5, \"similarity_boost\": 0.75, \"style\": 0.4 }\n}",
+        "options": {
+          "response": { "response": { "responseFormat": "file" } },
+          "timeout": 60000
+        }
+      },
+      "id": "elevenlabs",
+      "name": "ElevenLabs: Generate Voice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.cloudinary.com/v1_1/{{ $env.CLOUDINARY_CLOUD_NAME }}/auto/upload",
+        "sendHeaders": false,
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "file", "parameterType": "formBinaryData", "inputDataFieldName": "data" },
+            { "name": "upload_preset", "value": "={{ $env.CLOUDINARY_UPLOAD_PRESET }}" },
+            { "name": "folder", "value": "video-ai/voice" },
+            { "name": "resource_type", "value": "video" }
+          ]
+        }
+      },
+      "id": "upload-voice",
+      "name": "Cloudinary: Upload Voice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 200]
+    },
+
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.argil.ai/videos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.ARGIL_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"Video {{ $('Create Video Record (placeholder)').item.json.id }}\",\n  \"avatarId\": \"{{ $env.ARGIL_AVATAR_ID }}\",\n  \"voiceId\": \"{{ $env.ARGIL_VOICE_ID }}\",\n  \"moments\": [\n    { \"transcript\": \"{{ $('Get Script').item.json.fields.hook }}\", \"avatarId\": \"{{ $env.ARGIL_AVATAR_ID }}\" },\n    { \"transcript\": \"{{ $('Get Script').item.json.fields.payoff }} {{ $('Get Script').item.json.fields.cta }}\", \"avatarId\": \"{{ $env.ARGIL_AVATAR_ID }}\" }\n  ],\n  \"aspectRatio\": \"9:16\",\n  \"webhookUrl\": \"={{ $env.WEBHOOK_URL }}webhook/argil-done?videoId={{ $('Create Video Record (placeholder)').item.json.id }}\"\n}"
+      },
+      "id": "argil",
+      "name": "Argil: Kick Off Avatar Render (async)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 400]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "const prompts = JSON.parse($('Get Script').item.json.fields.broll_prompts || '[]');\nreturn prompts.map(p => ({ json: { query: p } }));"
+      },
+      "id": "expand-broll",
+      "name": "Expand B-roll Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 600]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.pexels.com/videos/search?query={{ encodeURIComponent($json.query) }}&per_page=3&orientation=portrait",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Authorization", "value": "={{ $env.PEXELS_API_KEY }}" }]
+        }
+      },
+      "id": "pexels",
+      "name": "Pexels: Search Clips",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst clips = items.map(item => {\n  const videos = item.json.videos || [];\n  const pick = videos.find(v => v.duration >= 5 && v.duration <= 15) || videos[0];\n  if (!pick) return null;\n  const file = pick.video_files.find(f => f.quality === 'hd' && f.width <= 1080) || pick.video_files[0];\n  return { url: file.link, duration: pick.duration };\n}).filter(Boolean);\nreturn [{ json: { broll_urls: clips.map(c => c.url) } }];"
+      },
+      "id": "pick-broll",
+      "name": "Pick Best B-roll",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 600]
+    },
+
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "merge",
+      "name": "Merge Async Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1520, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate state into a single update payload\nconst voiceUrl = $('Cloudinary: Upload Voice').item?.json?.secure_url || '';\nconst argilJobId = $('Argil: Kick Off Avatar Render (async)').item?.json?.id || $('Argil: Kick Off Avatar Render (async)').item?.json?.jobId || '';\nconst brollUrls = $('Pick Best B-roll').item?.json?.broll_urls || [];\nreturn [{\n  json: {\n    voice_url: voiceUrl,\n    argil_job_id: argilJobId,\n    broll_urls: JSON.stringify(brollUrls)\n  }\n}];"
+      },
+      "id": "build-state",
+      "name": "Build State Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 400]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Videos", "mode": "name" },
+        "id": "={{ $('Create Video Record (placeholder)').item.json.id }}",
+        "columns": {
+          "mappingMode": "autoMapInputData"
+        }
+      },
+      "id": "save-state",
+      "name": "Save Async State to Videos",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [1960, 400],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"video_id\": \"{{ $('Create Video Record (placeholder)').item.json.id }}\", \"status\": \"awaiting_argil\" }"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2180, 400]
+    }
+  ],
+  "connections": {
+    "Webhook (Script Approved)": { "main": [[{ "node": "Get Script", "type": "main", "index": 0 }]] },
+    "Get Script": { "main": [[{ "node": "Create Video Record (placeholder)", "type": "main", "index": 0 }]] },
+    "Create Video Record (placeholder)": { "main": [[
+      { "node": "ElevenLabs: Generate Voice", "type": "main", "index": 0 },
+      { "node": "Argil: Kick Off Avatar Render (async)", "type": "main", "index": 0 },
+      { "node": "Expand B-roll Prompts", "type": "main", "index": 0 }
+    ]] },
+    "ElevenLabs: Generate Voice": { "main": [[{ "node": "Cloudinary: Upload Voice", "type": "main", "index": 0 }]] },
+    "Cloudinary: Upload Voice": { "main": [[{ "node": "Merge Async Results", "type": "main", "index": 0 }]] },
+    "Argil: Kick Off Avatar Render (async)": { "main": [[{ "node": "Merge Async Results", "type": "main", "index": 1 }]] },
+    "Expand B-roll Prompts": { "main": [[{ "node": "Pexels: Search Clips", "type": "main", "index": 0 }]] },
+    "Pexels: Search Clips": { "main": [[{ "node": "Pick Best B-roll", "type": "main", "index": 0 }]] },
+    "Pick Best B-roll": { "main": [[{ "node": "Merge Async Results", "type": "main", "index": 2 }]] },
+    "Merge Async Results": { "main": [[{ "node": "Build State Payload", "type": "main", "index": 0 }]] },
+    "Build State Payload": { "main": [[{ "node": "Save Async State to Videos", "type": "main", "index": 0 }]] },
+    "Save Async State to Videos": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

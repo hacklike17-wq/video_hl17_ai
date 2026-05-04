@@ -1,0 +1,107 @@
+{
+  "name": "06 — Submagic Callback → Finalize Video",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "submagic-done",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook (Submagic Done)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Submagic webhook payload — verify against actual API docs.\n// Common fields: id/projectId, status, output_url/videoUrl, thumbnail, duration\nconst body = $input.first().json.body || $input.first().json;\nconst query = $input.first().json.query || {};\nconst videoId = query.videoId;\nconst status = body.status || 'unknown';\nconst finalUrl = body.output_url || body.videoUrl || body.url || '';\nconst thumbnail = body.thumbnail || body.thumbnail_url || '';\nconst duration = body.duration || 0;\nconst error = body.error || null;\nif (!videoId) throw new Error('Missing videoId in callback query string');\nreturn [{ json: { videoId, status, finalUrl, thumbnail, duration, error, raw: body } }];"
+      },
+      "id": "parse",
+      "name": "Parse Submagic Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{ $json.status }}", "operation": "equal", "value2": "completed" }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Render Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Videos", "mode": "name" },
+        "id": "={{ $json.videoId }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "final_url": "={{ $json.finalUrl }}",
+            "duration": "={{ $json.duration }}",
+            "status": "Pending Review"
+          }
+        }
+      },
+      "id": "save-final",
+      "name": "Save Final URL → Pending Review",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [860, 200],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Videos", "mode": "name" },
+        "id": "={{ $json.videoId }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "Submagic Failed",
+            "reject_reason": "={{ $json.error || 'Submagic render failed' }}"
+          }
+        }
+      },
+      "id": "mark-failed",
+      "name": "Mark Failed",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [860, 460],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true }"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1080, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (Submagic Done)": { "main": [[{ "node": "Parse Submagic Payload", "type": "main", "index": 0 }]] },
+    "Parse Submagic Payload": { "main": [[{ "node": "Render Completed?", "type": "main", "index": 0 }]] },
+    "Render Completed?": { "main": [
+      [{ "node": "Save Final URL → Pending Review", "type": "main", "index": 0 }],
+      [{ "node": "Mark Failed", "type": "main", "index": 0 }]
+    ] },
+    "Save Final URL → Pending Review": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Mark Failed": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

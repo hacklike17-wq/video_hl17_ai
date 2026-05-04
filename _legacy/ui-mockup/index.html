@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Video AI — Bảng điều khiển</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif;
+    background: #f4f5f7;
+    color: #1f2937;
+    font-size: 14px;
+  }
+  .topbar {
+    height: 52px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+  }
+  .topbar .logo {
+    font-weight: 800;
+    color: #ff6b35;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+  }
+  .topbar .logo .dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 8px #16a34a; }
+  .topbar .breadcrumb { color: #6b7280; font-size: 13px; }
+  .topbar .spacer { flex: 1; }
+  .topbar .help-btn {
+    padding: 6px 12px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #c2410c;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+  }
+  .topbar .user { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #ff6b35, #ea580c); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+
+  .layout { display: flex; height: calc(100vh - 52px); }
+  .sidebar {
+    width: 240px;
+    background: #fff;
+    border-right: 1px solid #e5e7eb;
+    padding: 16px 0;
+    overflow-y: auto;
+  }
+  .sidebar h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #9ca3af;
+    padding: 8px 16px 6px;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+  }
+  .sidebar .item {
+    padding: 10px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #374151;
+    border-left: 3px solid transparent;
+    font-size: 14px;
+  }
+  .sidebar .item:hover { background: #f9fafb; }
+  .sidebar .item.active { background: #fff7ed; color: #ea580c; border-left-color: #ff6b35; font-weight: 600; }
+  .sidebar .item .icon { width: 20px; text-align: center; }
+  .sidebar .item .badge { margin-left: auto; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .sidebar .item .badge.success { background: #dcfce7; color: #166534; }
+
+  .main { flex: 1; overflow-y: auto; padding: 20px 28px; }
+
+  /* Onboarding banner */
+  .onboarding {
+    background: linear-gradient(135deg, #fff7ed, #fef3c7);
+    border: 1px solid #fed7aa;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .onboarding .icon { font-size: 22px; }
+  .onboarding .text { flex: 1; }
+  .onboarding .text b { color: #c2410c; }
+  .onboarding .text small { color: #92400e; }
+  .onboarding .close {
+    cursor: pointer;
+    color: #92400e;
+    font-size: 18px;
+    background: transparent;
+    border: none;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .toolbar h2 { flex: 1; font-size: 20px; font-weight: 700; }
+  .toolbar h2 .hint { font-size: 13px; color: #6b7280; font-weight: 400; margin-left: 8px; }
+  .btn {
+    padding: 8px 14px;
+    border-radius: 7px;
+    border: 1px solid #d1d5db;
+    background: white;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: #f9fafb; border-color: #9ca3af; }
+  .btn.primary { background: #ff6b35; color: white; border-color: #ff6b35; }
+  .btn.primary:hover { background: #ea580c; border-color: #ea580c; }
+  .btn.success { background: #16a34a; color: white; border-color: #16a34a; }
+  .btn.success:hover { background: #15803d; }
+  .btn.danger { background: #fff; color: #dc2626; border-color: #fecaca; }
+  .btn.danger:hover { background: #fef2f2; }
+  .btn.ghost { background: transparent; border-color: transparent; color: #6b7280; }
+  .btn.ghost:hover { background: #f3f4f6; color: #1f2937; }
+
+  /* Kanban view */
+  .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .col {
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 10px;
+    min-height: 400px;
+  }
+  .col h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #4b5563;
+    padding: 6px 8px 10px;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+  }
+  .col h4 .count { background: #e5e7eb; color: #4b5563; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .card {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    cursor: pointer;
+    border-left: 3px solid #ff6b35;
+    transition: all 0.15s;
+  }
+  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-1px); }
+  .card .title { font-weight: 500; margin-bottom: 8px; line-height: 1.4; }
+  .card .meta { font-size: 11px; color: #6b7280; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .card .pillar { background: #ede9fe; color: #6d28d9; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+  .card .pillar.tech { background: #dbeafe; color: #1d4ed8; }
+  .card .pillar.ai { background: #ede9fe; color: #6d28d9; }
+  .card .pillar.prod { background: #d1fae5; color: #047857; }
+  .card .score { background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .card .views { color: #6b7280; }
+  .card.script { border-left-color: #8b5cf6; }
+  .card.video { border-left-color: #16a34a; }
+
+  /* Gallery view */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .video-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: all 0.2s;
+  }
+  .video-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.12); transform: translateY(-2px); }
+  .video-thumb {
+    aspect-ratio: 9 / 16;
+    background: linear-gradient(135deg, #1f2937, #4b5563);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    overflow: hidden;
+  }
+  .video-thumb .play {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+  .video-thumb .duration {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.75);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .video-thumb .hook-overlay {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    color: white;
+    font-weight: 800;
+    font-size: 17px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    line-height: 1.25;
+  }
+  .video-thumb .new-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff6b35;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .video-info { padding: 14px; }
+  .video-info .title { font-weight: 600; margin-bottom: 6px; line-height: 1.3; font-size: 14px; }
+  .video-info .meta { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
+  .video-info .actions { display: flex; gap: 6px; }
+  .video-info .actions .btn { flex: 1; padding: 8px; font-size: 12px; }
+
+  /* Detail panel */
+  .modal-bg {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: white;
+    width: 760px;
+    max-width: 92vw;
+    max-height: 88vh;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+  }
+  .modal-head {
+    padding: 18px 22px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+  }
+  .modal-head h3 { flex: 1; font-size: 17px; }
+  .modal-body { padding: 22px; overflow-y: auto; }
+  .modal-foot { padding: 14px 22px; border-top: 1px solid #e5e7eb; display: flex; gap: 8px; justify-content: flex-end; background: #f9fafb; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .field label .help { font-weight: 400; text-transform: none; color: #9ca3af; margin-left: 6px; letter-spacing: 0; }
+  .field .val {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .field .val.editable { background: white; border-color: #d1d5db; }
+  .script-section { margin-bottom: 12px; background: #f9fafb; border-radius: 8px; padding: 12px; }
+  .script-section .label-inline {
+    display: inline-block;
+    font-size: 10px;
+    background: #ff6b35;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .script-section .label-inline.broll { background: #6d28d9; }
+  .script-section .desc { font-size: 11px; color: #6b7280; margin-top: 4px; }
+  .script-section .text { margin-top: 8px; font-size: 14px; line-height: 1.55; }
+
+  /* Mobile review */
+  .mobile-frame {
+    width: 360px;
+    height: 720px;
+    background: #000;
+    border-radius: 36px;
+    padding: 12px;
+    margin: 24px auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    position: relative;
+  }
+  .mobile-frame::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90px;
+    height: 22px;
+    background: #000;
+    border-radius: 0 0 14px 14px;
+    z-index: 2;
+  }
+  .mobile-screen {
+    background: #f4f5f7;
+    border-radius: 26px;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-header {
+    background: white;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 36px;
+  }
+  .mobile-header .title { font-weight: 700; font-size: 15px; }
+  .mobile-header .count { margin-left: auto; font-size: 12px; color: #6b7280; }
+  .mobile-content { flex: 1; padding: 14px; overflow-y: auto; }
+  .mobile-video {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    background: linear-gradient(135deg, #1f2937, #4b5563);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .mobile-meta { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
+  .mobile-actions { display: flex; gap: 8px; }
+  .mobile-actions .btn { flex: 1; padding: 14px; font-size: 14px; font-weight: 700; }
+
+  .view-tabs {
+    display: flex;
+    gap: 3px;
+    background: #e5e7eb;
+    padding: 3px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+  .view-tabs button {
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+  }
+  .view-tabs button.active { background: white; color: #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+  .view-section { display: none; }
+  .view-section.active { display: block; }
+
+  /* Pipeline */
+  .pipeline-status {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .pipeline-stages { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .stage {
+    flex: 1;
+    text-align: center;
+    padding: 10px 6px;
+    border-radius: 7px;
+    font-size: 12px;
+    background: #f3f4f6;
+    color: #6b7280;
+    font-weight: 500;
+    min-width: 90px;
+  }
+  .stage.done { background: #dcfce7; color: #15803d; }
+  .stage.active { background: #fef3c7; color: #b45309; animation: pulse 1.6s infinite; }
+  .arrow { color: #d1d5db; font-size: 16px; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
+
+  .stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 18px;
+    border: 1px solid #e5e7eb;
+  }
+  .stat-card .label { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .stat-card .value { font-size: 30px; font-weight: 800; color: #1f2937; margin: 4px 0; }
+  .stat-card .delta { font-size: 12px; color: #6b7280; }
+  .stat-card .delta.up { color: #16a34a; }
+  .stat-card .delta.warn { color: #b45309; }
+
+  /* Brand profile */
+  .brand-form { background: white; border-radius: 12px; padding: 28px; max-width: 760px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .brand-form .field { margin-bottom: 18px; }
+  .brand-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .tooltip {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #6b7280;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    cursor: help;
+    margin-left: 4px;
+  }
+  .tooltip:hover { background: #ff6b35; color: white; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <span class="dot"></span>
+    VIDEO AI
+  </div>
+  <div class="breadcrumb">Bảng làm việc › Sản xuất video</div>
+  <div class="spacer"></div>
+  <button class="btn" onclick="alert('Mở popup nhập tay ý tưởng mới')">+ Thêm ý tưởng</button>
+  <button class="btn primary" onclick="alert('Đang quét trend từ TikTok... Chờ ~30 giây')">⚡ Quét trend ngay</button>
+  <button class="help-btn" onclick="document.getElementById('modal-help').classList.add('show')">📖 Hướng dẫn</button>
+  <div class="user">H</div>
+</div>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <h3>Quy trình làm video</h3>
+    <div class="item active" onclick="showView('ideas', this)">
+      <span class="icon">💡</span>
+      <span>1. Ý tưởng</span>
+      <span class="badge">12 mới</span>
+    </div>
+    <div class="item" onclick="showView('scripts', this)">
+      <span class="icon">📝</span>
+      <span>2. Kịch bản</span>
+      <span class="badge">3 chờ duyệt</span>
+    </div>
+    <div class="item" onclick="showView('videos', this)">
+      <span class="icon">🎬</span>
+      <span>3. Video</span>
+      <span class="badge">5 chờ xem</span>
+    </div>
+
+    <h3 style="margin-top: 24px;">Cấu hình</h3>
+    <div class="item" onclick="showView('brand', this)">
+      <span class="icon">⭐</span>
+      <span>Hồ sơ thương hiệu</span>
+    </div>
+
+    <h3 style="margin-top: 24px;">Theo dõi</h3>
+    <div class="item" onclick="showView('mobile', this)">
+      <span class="icon">📱</span>
+      <span>Duyệt trên điện thoại</span>
+    </div>
+    <div class="item" onclick="showView('pipeline', this)">
+      <span class="icon">📊</span>
+      <span>Trạng thái hệ thống</span>
+    </div>
+
+    <h3 style="margin-top: 24px;">Sau khi xuất bản</h3>
+    <div class="item" onclick="alert('Calendar view - lịch các video sắp đăng')">
+      <span class="icon">📅</span>
+      <span>Lịch đăng</span>
+    </div>
+    <div class="item" onclick="alert('Analytics - xem thống kê views, likes')">
+      <span class="icon">📈</span>
+      <span>Thống kê</span>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- IDEAS VIEW -->
+    <section id="view-ideas" class="view-section active">
+
+      <div class="onboarding" id="onboard-ideas">
+        <div class="icon">👋</div>
+        <div class="text">
+          <b>Bắt đầu ở đây.</b> Đây là kho ý tưởng được AI tự động lấy từ TikTok mỗi 4 giờ.
+          <small>Việc của bạn: lướt qua, chọn idea hay → bấm <b>Tạo kịch bản</b>.</small>
+        </div>
+        <button class="close" onclick="this.parentElement.style.display='none'">✕</button>
+      </div>
+
+      <div class="toolbar">
+        <h2>💡 Ý tưởng <span class="hint">— AI quét từ TikTok mỗi 4 giờ</span></h2>
+        <div class="view-tabs">
+          <button class="active">Bảng kéo</button>
+          <button>Danh sách</button>
+        </div>
+        <button class="btn">Lọc: Tất cả chủ đề</button>
+        <button class="btn">Sắp xếp: Điểm cao ↓</button>
+      </div>
+
+      <div class="kanban">
+        <div class="col">
+          <h4>MỚI <span class="count">8</span></h4>
+          <div class="card" onclick="openModal('idea')">
+            <div class="title">5 AI tools làm việc thay tôi 8h/ngày</div>
+            <div class="meta">
+              <span class="pillar prod">Năng suất</span>
+              <span class="score">★ 9.2</span>
+              <span class="views">👁 234K</span>
+            </div>
+          </div>
+          <div class="card" onclick="openModal('idea')">
+            <div class="title">Cursor vs Claude Code: ai thắng?</div>
+            <div class="meta">
+              <span class="pillar tech">Công nghệ</span>
+              <span class="score">★ 8.7</span>
+              <span class="views">👁 89K</span>
+            </div>
+          </div>
+          <div class="card" onclick="openModal('idea')">
+            <div class="title">Tôi dùng AI viết 100 emails/ngày</div>
+            <div class="meta">
+              <span class="pillar ai">AI</span>
+              <span class="score">★ 8.4</span>
+              <span class="views">👁 156K</span>
+            </div>
+          </div>
+          <div class="card" onclick="openModal('idea')">
+            <div class="title">Workflow buổi sáng của AI engineer</div>
+            <div class="meta">
+              <span class="pillar prod">Năng suất</span>
+              <span class="score">★ 7.9</span>
+              <span class="views">👁 67K</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <h4>ĐÃ DUYỆT <span class="count">2</span></h4>
+          <div class="card">
+            <div class="title">Tại sao Claude 4.7 đánh bại GPT-5</div>
+            <div class="meta">
+              <span class="pillar ai">AI</span>
+              <span class="score">★ 9.5</span>
+            </div>
+            <button class="btn primary" style="width: 100%; margin-top: 10px;">⚡ Tạo kịch bản</button>
+          </div>
+          <div class="card">
+            <div class="title">Setup VS Code 2026 cho AI dev</div>
+            <div class="meta">
+              <span class="pillar tech">Công nghệ</span>
+              <span class="score">★ 8.9</span>
+            </div>
+            <button class="btn primary" style="width: 100%; margin-top: 10px;">⚡ Tạo kịch bản</button>
+          </div>
+        </div>
+
+        <div class="col">
+          <h4>ĐANG VIẾT <span class="count">1</span></h4>
+          <div class="card script">
+            <div class="title">3 prompt biến Claude thành senior dev</div>
+            <div class="meta">
+              <span class="pillar ai">AI</span>
+              <span style="color: #b45309; font-weight: 600;">⏳ AI đang viết...</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <h4>HOÀN TẤT <span class="count">1</span></h4>
+          <div class="card">
+            <div class="title">Tôi tự build pipeline video AI</div>
+            <div class="meta">
+              <span class="pillar ai">AI</span>
+              <span style="color: #15803d; font-weight: 600;">✓ Đã đăng</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCRIPTS VIEW -->
+    <section id="view-scripts" class="view-section">
+      <div class="onboarding" id="onboard-scripts">
+        <div class="icon">📝</div>
+        <div class="text">
+          <b>Đọc kịch bản AI viết.</b> Nếu hay thì bấm <b>Duyệt</b> để hệ thống dựng video.
+          <small>Có thể sửa text trực tiếp trước khi duyệt. Không ưng thì <b>Viết lại</b>.</small>
+        </div>
+        <button class="close" onclick="this.parentElement.style.display='none'">✕</button>
+      </div>
+
+      <div class="toolbar">
+        <h2>📝 Kịch bản <span class="hint">— AI viết theo phong cách của bạn</span></h2>
+        <button class="btn">Lọc: Chờ duyệt</button>
+      </div>
+
+      <div style="background: white; border-radius: 10px; border: 1px solid #e5e7eb; overflow: hidden;">
+        <div style="display: grid; grid-template-columns: 2.2fr 1fr 1.2fr 1fr 220px; padding: 12px 18px; background: #f9fafb; font-size: 11px; text-transform: uppercase; color: #6b7280; font-weight: 700; letter-spacing: 0.4px;">
+          <div>Tiêu đề</div>
+          <div>Chủ đề</div>
+          <div>Trạng thái</div>
+          <div>Tạo lúc</div>
+          <div>Hành động</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2.2fr 1fr 1.2fr 1fr 220px; padding: 14px 18px; border-top: 1px solid #f3f4f6; align-items: center; cursor: pointer; transition: background 0.15s;" onclick="openModal('script')" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+          <div style="font-weight: 500;">Tại sao Claude 4.7 đánh bại GPT-5</div>
+          <div><span class="pillar" style="background: #ede9fe; color: #6d28d9; padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 600;">AI</span></div>
+          <div><span style="background: #fef3c7; color: #b45309; padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 600;">⏳ Chờ duyệt</span></div>
+          <div style="color: #6b7280; font-size: 12px;">2 phút trước</div>
+          <div style="display: flex; gap: 5px;">
+            <button class="btn success" style="padding: 5px 10px; font-size: 12px;">✓ Duyệt</button>
+            <button class="btn" style="padding: 5px 10px; font-size: 12px;">↻ Viết lại</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2.2fr 1fr 1.2fr 1fr 220px; padding: 14px 18px; border-top: 1px solid #f3f4f6; align-items: center;">
+          <div style="font-weight: 500;">Setup VS Code 2026 cho AI dev</div>
+          <div><span class="pillar" style="background: #dbeafe; color: #1d4ed8; padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 600;">Công nghệ</span></div>
+          <div><span style="background: #fef3c7; color: #b45309; padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 600;">⏳ Chờ duyệt</span></div>
+          <div style="color: #6b7280; font-size: 12px;">5 phút trước</div>
+          <div style="display: flex; gap: 5px;">
+            <button class="btn success" style="padding: 5px 10px; font-size: 12px;">✓ Duyệt</button>
+            <button class="btn" style="padding: 5px 10px; font-size: 12px;">↻ Viết lại</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2.2fr 1fr 1.2fr 1fr 220px; padding: 14px 18px; border-top: 1px solid #f3f4f6; align-items: center;">
+          <div style="font-weight: 500;">3 prompt biến Claude thành senior dev</div>
+          <div><span class="pillar" style="background: #ede9fe; color: #6d28d9; padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 600;">AI</span></div>
+          <div><span style="background: #dcfce7; color: #15803d; padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 600;">✓ Đang dựng video</span></div>
+          <div style="color: #6b7280; font-size: 12px;">12 phút trước</div>
+          <div style="color: #6b7280; font-size: 12px;">⏳ Đang xử lý...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIDEOS VIEW -->
+    <section id="view-videos" class="view-section">
+      <div class="onboarding" id="onboard-videos">
+        <div class="icon">🎬</div>
+        <div class="text">
+          <b>Xem video đã dựng xong.</b> Bấm vào video để xem trước, sau đó <b>Duyệt &amp; Đăng</b> hoặc <b>Hủy</b>.
+          <small>Đã duyệt → Buffer tự đăng theo lịch lên TikTok / Instagram / YouTube Shorts.</small>
+        </div>
+        <button class="close" onclick="this.parentElement.style.display='none'">✕</button>
+      </div>
+
+      <div class="toolbar">
+        <h2>🎬 Video chờ duyệt <span class="hint">— Xem trước rồi quyết định đăng hay không</span></h2>
+        <button class="btn">Lọc: Tất cả</button>
+      </div>
+
+      <div class="gallery">
+        <div class="video-card">
+          <div class="video-thumb">
+            <div class="new-badge">MỚI</div>
+            <div class="hook-overlay">5 AI tools thay đổi cuộc đời tôi</div>
+            <div class="play">▶</div>
+            <div class="duration">0:48</div>
+          </div>
+          <div class="video-info">
+            <div class="title">5 AI tools thay đổi cuộc đời tôi</div>
+            <div class="meta">Dựng xong 3 phút trước · 12.4 MB</div>
+            <div class="actions">
+              <button class="btn success">✓ Duyệt &amp; Đăng</button>
+              <button class="btn danger">✕ Hủy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="video-card">
+          <div class="video-thumb" style="background: linear-gradient(135deg, #7c3aed, #ec4899);">
+            <div class="hook-overlay">Claude 4.7 vừa chôn GPT-5</div>
+            <div class="play">▶</div>
+            <div class="duration">0:52</div>
+          </div>
+          <div class="video-info">
+            <div class="title">Tại sao Claude 4.7 đánh bại GPT-5</div>
+            <div class="meta">Dựng xong 8 phút trước · 14.1 MB</div>
+            <div class="actions">
+              <button class="btn success">✓ Duyệt &amp; Đăng</button>
+              <button class="btn danger">✕ Hủy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="video-card">
+          <div class="video-thumb" style="background: linear-gradient(135deg, #0891b2, #06b6d4);">
+            <div class="hook-overlay">VS Code setup mới nhất 2026</div>
+            <div class="play">▶</div>
+            <div class="duration">0:45</div>
+          </div>
+          <div class="video-info">
+            <div class="title">Setup VS Code 2026 cho AI dev</div>
+            <div class="meta">Dựng xong 12 phút trước · 11.8 MB</div>
+            <div class="actions">
+              <button class="btn success">✓ Duyệt &amp; Đăng</button>
+              <button class="btn danger">✕ Hủy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="video-card">
+          <div class="video-thumb" style="background: linear-gradient(135deg, #dc2626, #f97316);">
+            <div class="hook-overlay">Workflow sáng 4h của AI dev</div>
+            <div class="play">▶</div>
+            <div class="duration">0:50</div>
+          </div>
+          <div class="video-info">
+            <div class="title">Workflow buổi sáng của AI engineer</div>
+            <div class="meta">Dựng xong 18 phút trước · 13.2 MB</div>
+            <div class="actions">
+              <button class="btn success">✓ Duyệt &amp; Đăng</button>
+              <button class="btn danger">✕ Hủy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BRAND VIEW -->
+    <section id="view-brand" class="view-section">
+      <div class="onboarding" id="onboard-brand">
+        <div class="icon">⭐</div>
+        <div class="text">
+          <b>Đây là "ADN" của bạn — AI dùng để viết script đúng phong cách.</b>
+          <small>Cập nhật một lần, dùng cho mọi video. Càng đầy đủ thì script càng giống bạn.</small>
+        </div>
+        <button class="close" onclick="this.parentElement.style.display='none'">✕</button>
+      </div>
+
+      <div class="toolbar">
+        <h2>⭐ Hồ sơ thương hiệu — Henry</h2>
+        <button class="btn primary">💾 Lưu thay đổi</button>
+      </div>
+
+      <div class="brand-form">
+        <div class="row">
+          <div class="field">
+            <label>Giọng nói AI <span class="tooltip" title="ID voice clone từ ElevenLabs">?</span></label>
+            <div class="val">
+              eVit2A8x9P3dCxKqZw5N
+              <button class="btn" style="float:right; padding: 3px 10px; font-size: 11px;">▶ Nghe thử</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Khuôn mặt AI <span class="tooltip" title="ID avatar từ Argil — đã train trên video của bạn">?</span></label>
+            <div class="val">
+              arg_avatar_henry_v2
+              <button class="btn" style="float:right; padding: 3px 10px; font-size: 11px;">👁 Xem thử</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Chủ đề bạn nói <span class="help">— AI chỉ chọn idea thuộc các chủ đề này</span></label>
+          <div class="val editable">Công nghệ, AI, Năng suất, Indie Hacking</div>
+        </div>
+
+        <div class="field">
+          <label>Chủ đề CẤM <span class="help">— AI sẽ tránh hoàn toàn</span></label>
+          <div class="val editable">Chính trị, Tôn giáo, Crypto trading, Cờ bạc</div>
+        </div>
+
+        <div class="field">
+          <label>Câu nói đặc trưng <span class="help">— AI sẽ chèn tự nhiên 1-2 lần/script</span></label>
+          <div class="val editable">"Thật ra thì...", "Nói thẳng nha", "Cái này nhiều người không biết"</div>
+        </div>
+
+        <div class="field">
+          <label>Phong cách hình ảnh</label>
+          <div class="val editable">
+            Màu chính: <span style="background:#FF6B35;color:white;padding:2px 8px;border-radius:4px; font-weight: 600;">#FF6B35</span>
+            · Font: SVN-Gilroy
+            · Tỉ lệ: 9:16
+            · Bộ lọc: Phim ấm
+          </div>
+        </div>
+
+        <div class="field">
+          <label>20 hook viral mẫu <span class="help">— AI học style mở đầu của bạn</span></label>
+          <div class="val editable" style="font-size: 13px; max-height: 160px; overflow-y: auto; line-height: 1.7;">
+            1. "Thằng bạn tôi vừa kiếm $10K từ..."<br>
+            2. "Tôi đã sai trong 5 năm khi nghĩ rằng..."<br>
+            3. "Đừng dùng tool X nếu bạn chưa biết cái này"<br>
+            4. "3 setting nhỏ thay đổi cách tôi code"<br>
+            5. "Cái này nhiều người không biết..."<br>
+            <span style="color: #9ca3af;">... còn 15 hook khác</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>5 script mẫu <span class="help">— AI học cấu trúc và giọng văn</span></label>
+          <div class="val editable" style="font-size: 13px; color: #6b7280;">
+            5 script đã viết tốt nhất của bạn — dùng làm mẫu cho mỗi lần AI tạo script mới.
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Kêu gọi cuối video (CTA) <span class="help">— Luôn đặt cuối mọi video</span></label>
+          <div class="val editable">Follow để xem thêm content về AI và năng suất</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MOBILE VIEW -->
+    <section id="view-mobile" class="view-section">
+      <div class="onboarding">
+        <div class="icon">📱</div>
+        <div class="text">
+          <b>Duyệt video trên điện thoại trong vòng 30 giây.</b>
+          <small>Mở app Airtable → Interface "Duyệt nhanh" → swipe để xem từng video → Duyệt hoặc Hủy.</small>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <h2>📱 Giao diện duyệt trên điện thoại</h2>
+      </div>
+
+      <div class="mobile-frame">
+        <div class="mobile-screen">
+          <div class="mobile-header">
+            <div class="title">Video chờ duyệt</div>
+            <div class="count">2 / 4</div>
+          </div>
+          <div class="mobile-content">
+            <div class="mobile-video">
+              <div style="position: absolute; top: 14px; left: 14px; right: 14px; color: white; font-weight: 800; font-size: 17px; text-shadow: 0 2px 6px rgba(0,0,0,0.7); line-height: 1.25;">Claude 4.7 vừa chôn GPT-5</div>
+              <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.95); color: #1f2937; display: flex; align-items: center; justify-content: center; font-size: 26px;">▶</div>
+              <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.75); color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">0:52</div>
+            </div>
+            <div style="font-weight: 700; margin-bottom: 4px; font-size: 14px;">Tại sao Claude 4.7 đánh bại GPT-5</div>
+            <div class="mobile-meta">Chủ đề: AI · Điểm: 9.5 · 8 phút trước</div>
+            <div class="mobile-actions">
+              <button class="btn danger">✕ Hủy</button>
+              <button class="btn success">✓ Duyệt &amp; Đăng</button>
+            </div>
+            <div style="margin-top: 14px; padding: 12px; background: white; border-radius: 10px; font-size: 12px;">
+              <div style="font-weight: 700; margin-bottom: 6px;">⏰ Hẹn giờ đăng</div>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn" style="flex: 1; font-size: 11px; padding: 7px;">Ngay</button>
+                <button class="btn" style="flex: 1; font-size: 11px; padding: 7px;">+1h</button>
+                <button class="btn" style="flex: 1; font-size: 11px; padding: 7px;">8h tối</button>
+                <button class="btn" style="flex: 1; font-size: 11px; padding: 7px;">Chọn</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; color: #6b7280; font-size: 13px; margin-top: 16px;">
+        ↑ Vuốt trái/phải để chuyển video · Chạm thumbnail để xem toàn màn hình
+      </div>
+    </section>
+
+    <!-- PIPELINE VIEW -->
+    <section id="view-pipeline" class="view-section">
+      <div class="onboarding">
+        <div class="icon">📊</div>
+        <div class="text">
+          <b>Bảng theo dõi hệ thống đang chạy gì.</b>
+          <small>Xem có lỗi không, video nào đang dựng, chi phí hôm nay bao nhiêu.</small>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <h2>📊 Trạng thái hệ thống</h2>
+        <button class="btn">24 giờ qua</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px;">
+        <div class="stat-card">
+          <div class="label">Idea quét được</div>
+          <div class="value">47</div>
+          <div class="delta up">▲ +12 so với hôm qua</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Bạn đã duyệt</div>
+          <div class="value">3</div>
+          <div class="delta">25% tỉ lệ chấp nhận</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Video đã dựng</div>
+          <div class="value">2</div>
+          <div class="delta warn">⏳ 1 đang xếp hàng</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Chi phí hôm nay</div>
+          <div class="value">$8.40</div>
+          <div class="delta">~$4.20 / video</div>
+        </div>
+      </div>
+
+      <div class="pipeline-status">
+        <div style="font-weight: 700; margin-bottom: 14px; font-size: 15px;">⏳ Đang dựng: "3 prompt biến Claude thành senior dev"</div>
+        <div class="pipeline-stages">
+          <div class="stage done">✓ Ý tưởng</div>
+          <div class="arrow">→</div>
+          <div class="stage done">✓ Kịch bản</div>
+          <div class="arrow">→</div>
+          <div class="stage done">✓ Giọng đọc</div>
+          <div class="arrow">→</div>
+          <div class="stage active">⏳ Khuôn mặt</div>
+          <div class="arrow">→</div>
+          <div class="stage">B-roll</div>
+          <div class="arrow">→</div>
+          <div class="stage">Ghép video</div>
+          <div class="arrow">→</div>
+          <div class="stage">Bạn duyệt</div>
+          <div class="arrow">→</div>
+          <div class="stage">Đăng</div>
+        </div>
+      </div>
+
+      <div style="background: white; border-radius: 10px; padding: 18px; border: 1px solid #e5e7eb;">
+        <div style="font-weight: 700; margin-bottom: 14px; font-size: 15px;">📋 Hoạt động gần đây</div>
+        <div style="font-size: 13px; line-height: 1.9;">
+          <div>✅ <span style="color: #6b7280;">14:32</span> Đã tạo giọng đọc cho "3 prompt biến Claude..." (ElevenLabs, 18s)</div>
+          <div>✅ <span style="color: #6b7280;">14:31</span> Henry duyệt kịch bản → bắt đầu dựng video</div>
+          <div>✅ <span style="color: #6b7280;">14:29</span> Đã viết kịch bản (Claude, 4 giây, 1247 tokens)</div>
+          <div>⚡ <span style="color: #6b7280;">14:28</span> Henry bấm "Tạo kịch bản" cho idea #234</div>
+          <div>✅ <span style="color: #6b7280;">12:00</span> Đã quét 12 idea mới từ TikTok (Apify)</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- HELP MODAL -->
+<div class="modal-bg" id="modal-help" onclick="if(event.target===this) this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📖 Hướng dẫn nhanh — Quy trình 1 video</h3>
+      <button class="btn ghost" onclick="document.getElementById('modal-help').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: #fff7ed; border-radius: 10px; padding: 16px; margin-bottom: 18px; font-size: 14px; line-height: 1.6;">
+        <b>Mỗi ngày bạn làm 3 việc, mỗi việc ~5 phút:</b>
+      </div>
+
+      <div style="margin-bottom: 18px;">
+        <div style="font-weight: 700; color: #ff6b35; margin-bottom: 6px;">🌅 Sáng — 5 phút</div>
+        <div style="margin-left: 20px; font-size: 14px; line-height: 1.7;">
+          1. Mở tab <b>💡 Ý tưởng</b><br>
+          2. Lướt qua các idea AI quét đêm qua<br>
+          3. Thấy idea hay → kéo sang cột <b>"Đã duyệt"</b><br>
+          4. Bấm <b>⚡ Tạo kịch bản</b> cho 2-3 idea
+        </div>
+      </div>
+
+      <div style="margin-bottom: 18px;">
+        <div style="font-weight: 700; color: #8b5cf6; margin-bottom: 6px;">🕙 Trưa — 5 phút</div>
+        <div style="margin-left: 20px; font-size: 14px; line-height: 1.7;">
+          1. Mở tab <b>📝 Kịch bản</b><br>
+          2. Đọc kịch bản AI viết, sửa nhẹ nếu cần<br>
+          3. Bấm <b>✓ Duyệt</b> → AI bắt đầu dựng video (mất ~10 phút)
+        </div>
+      </div>
+
+      <div style="margin-bottom: 18px;">
+        <div style="font-weight: 700; color: #16a34a; margin-bottom: 6px;">🌆 Chiều — 5 phút (làm trên điện thoại)</div>
+        <div style="margin-left: 20px; font-size: 14px; line-height: 1.7;">
+          1. Mở app Airtable trên phone<br>
+          2. Vào Interface <b>"Duyệt nhanh"</b><br>
+          3. Xem từng video, bấm <b>✓ Duyệt &amp; Đăng</b><br>
+          4. Buffer tự đăng theo lịch lên TikTok / Instagram / YouTube
+        </div>
+      </div>
+
+      <div style="background: #ecfdf5; border-radius: 10px; padding: 14px; font-size: 13px; line-height: 1.6;">
+        <b style="color: #15803d;">💡 Mẹo:</b> Lần đầu bạn nên duyệt KỸ vài video đầu để AI học phong cách. Sau 5-10 video, AI sẽ viết đúng style của bạn.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn primary" onclick="document.getElementById('modal-help').classList.remove('show')">Đã hiểu, bắt đầu thôi!</button>
+    </div>
+  </div>
+</div>
+
+<!-- IDEA MODAL -->
+<div class="modal-bg" id="modal-idea" onclick="if(event.target===this) this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>5 AI tools làm việc thay tôi 8h/ngày</h3>
+      <button class="btn ghost" onclick="document.getElementById('modal-idea').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Nguồn</label>
+        <div class="val">TikTok @user.xyz · 234K views · 2 ngày trước</div>
+      </div>
+      <div class="field">
+        <label>Hook gốc</label>
+        <div class="val">"Tôi tiết kiệm 8 tiếng mỗi ngày nhờ 5 AI tool này"</div>
+      </div>
+      <div class="field">
+        <label>Chủ đề</label>
+        <div class="val">Năng suất</div>
+      </div>
+      <div class="field">
+        <label>Điểm phù hợp (do AI chấm)</label>
+        <div class="val">★ 9.2 / 10 — phù hợp chủ đề Năng suất, hook mạnh, có khả năng viral cao</div>
+      </div>
+      <div class="field">
+        <label>Góc tiếp cận đề xuất</label>
+        <div class="val">Tiếp cận từ góc dev/builder thay vì người làm văn phòng — nói cụ thể stack tool: Claude Code, Cursor, n8n, Linear, Granola.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn danger">Bỏ qua</button>
+      <button class="btn">Lưu xem sau</button>
+      <button class="btn primary" onclick="document.getElementById('modal-idea').classList.remove('show'); setTimeout(()=>showView('scripts', document.querySelectorAll('.sidebar .item')[1]), 300);">⚡ Duyệt &amp; Tạo kịch bản</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPT MODAL -->
+<div class="modal-bg" id="modal-script" onclick="if(event.target===this) this.classList.remove('show')">
+  <div class="modal" style="width: 820px;">
+    <div class="modal-head">
+      <h3>📝 Kịch bản: Tại sao Claude 4.7 đánh bại GPT-5</h3>
+      <button class="btn ghost" onclick="document.getElementById('modal-script').classList.remove('show')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div style="background: #ecfdf5; border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; font-size: 13px;">
+        <b style="color: #15803d;">💡 Cấu trúc video 50 giây:</b> Hook → Đặt vấn đề → Nội dung chính → Insight → Kêu gọi.
+        Có thể sửa text trực tiếp trước khi duyệt.
+      </div>
+
+      <div class="script-section">
+        <span class="label-inline">HOOK</span>
+        <span style="font-size: 11px; color: #6b7280;">0-3 giây · Khuôn mặt AI nói thẳng vào camera</span>
+        <div class="text">Claude 4.7 vừa chôn GPT-5 — và không ai nói cho bạn biết tại sao.</div>
+      </div>
+
+      <div class="script-section">
+        <span class="label-inline">ĐẶT VẤN ĐỀ</span>
+        <span style="font-size: 11px; color: #6b7280;">3-8 giây · B-roll + giọng đọc</span>
+        <div class="text">Tuần trước Anthropic ra Opus 4.7. Trên giấy, GPT-5 vẫn nhỉnh hơn benchmark. Nhưng dev thực tế thì khác.</div>
+      </div>
+
+      <div class="script-section">
+        <span class="label-inline">NỘI DUNG CHÍNH</span>
+        <span style="font-size: 11px; color: #6b7280;">8-35 giây · B-roll + giọng đọc</span>
+        <div class="text">Lý do 1: Context window 1 triệu token — GPT-5 max 400K. Tôi đẩy cả codebase 200K dòng vào, Claude trả lời chính xác từng file. Lý do 2: Tool use chính xác hơn. Lý do 3: Coding benchmark SWE-bench Verified vượt GPT-5 6%.</div>
+      </div>
+
+      <div class="script-section">
+        <span class="label-inline">INSIGHT</span>
+        <span style="font-size: 11px; color: #6b7280;">35-50 giây · Khuôn mặt AI nói thẳng vào camera</span>
+        <div class="text">Thật ra thì... benchmark không quan trọng bằng cảm giác khi code. Và Claude 4.7 cảm giác như có một senior dev ngồi bên cạnh.</div>
+      </div>
+
+      <div class="script-section">
+        <span class="label-inline">KÊU GỌI</span>
+        <span style="font-size: 11px; color: #6b7280;">50-55 giây · Khuôn mặt AI + chữ overlay</span>
+        <div class="text">Follow để xem stack AI dev tools tôi đang dùng.</div>
+      </div>
+
+      <div class="script-section" style="background: #f5f3ff;">
+        <span class="label-inline broll">CẢNH B-ROLL</span>
+        <span style="font-size: 11px; color: #6b7280;">AI sẽ tự tìm trên Pexels</span>
+        <div class="text" style="font-size: 13px; line-height: 1.7;">
+          1. Lập trình viên gõ máy tính (close-up)<br>
+          2. Animation neural network trừu tượng<br>
+          3. Màn hình code editor có gợi ý AI<br>
+          4. Biểu đồ so sánh hai đường<br>
+          5. Lập trình viên đang suy nghĩ, tay chống cằm<br>
+          <span style="color: #9ca3af;">... còn 5 cảnh khác</span>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 20px; background: #fff7ed; border-radius: 8px; padding: 12px 14px;">
+        <label>📊 Ước tính</label>
+        <div class="val" style="background: transparent; border: none; padding: 0;">
+          ⏱ Thời lượng: <b>52 giây</b> · 💰 Chi phí: <b>$4.20</b> · ⚙ Thời gian dựng: <b>~9 phút</b>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn">↻ Viết lại</button>
+      <button class="btn">✏ Sửa tay</button>
+      <button class="btn success" onclick="document.getElementById('modal-script').classList.remove('show')">✓ Duyệt &amp; Dựng video</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showView(name, el) {
+    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    document.querySelectorAll('.sidebar .item').forEach(i => i.classList.remove('active'));
+    if (el) el.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  function openModal(name) {
+    document.getElementById('modal-' + name).classList.add('show');
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-bg.show').forEach(m => m.classList.remove('show'));
+    }
+  });
+</script>
+
+</body>
+</html>

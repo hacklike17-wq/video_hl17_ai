@@ -1,0 +1,131 @@
+{
+  "name": "01 — Trend Crawler (cron 4h)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 4 }]
+        }
+      },
+      "id": "trigger-cron",
+      "name": "Every 4h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "hashtags", "value": "ai,claudecode,buildinpublic,aitools,productivity" }
+          ]
+        }
+      },
+      "id": "set-hashtags",
+      "name": "Hashtag List",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/clockworks~tiktok-scraper/run-sync-get-dataset-items?token={{ $env.APIFY_TOKEN }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"hashtags\": {{ $json.hashtags.split(',') }},\n  \"resultsPerPage\": 30,\n  \"shouldDownloadCovers\": false,\n  \"shouldDownloadVideos\": false\n}",
+        "options": { "timeout": 120000 }
+      },
+      "id": "apify-scrape",
+      "name": "Apify TikTok Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "split-items",
+      "name": "Split Items",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            { "value1": "={{ $json.playCount || 0 }}", "operation": "largerEqual", "value2": 50000 }
+          ]
+        }
+      },
+      "id": "filter-views",
+      "name": "Filter: ≥50K views",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-6",
+        "messages": {
+          "values": [
+            {
+              "role": "user",
+              "content": "=Đánh giá idea TikTok này có phù hợp với pillar Tech/AI/Productivity không.\n\nText: {{ $json.text }}\nViews: {{ $json.playCount }}\n\nTrả về JSON: { \"score\": 1-10, \"pillar\": \"Tech|AI|Productivity|Other\", \"angle\": \"góc tiếp cận đề xuất\" }"
+            }
+          ]
+        },
+        "options": { "maxTokens": 300, "temperature": 0.3 }
+      },
+      "id": "claude-score",
+      "name": "Claude Score & Classify",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1,
+      "position": [1300, 200],
+      "credentials": { "anthropicApi": { "id": "anthropic-credential", "name": "Anthropic" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Claude response, merge with original tiktok data\nconst items = $input.all();\nreturn items.map(item => {\n  const tiktok = item.json;\n  let claude = {};\n  try {\n    const text = tiktok._claude_response || '{}';\n    claude = JSON.parse(text.replace(/^```json\\s*/, '').replace(/```\\s*$/, ''));\n  } catch {}\n  return {\n    json: {\n      title: (tiktok.text || '').slice(0, 100),\n      hook_text: tiktok.text,\n      source_url: tiktok.webVideoUrl,\n      source_platform: 'tiktok',\n      view_count: tiktok.playCount,\n      posted_date: tiktok.createTimeISO,\n      pillar: claude.pillar || 'Other',\n      score: claude.score || 5,\n      angle: claude.angle || '',\n      status: 'Idea'\n    }\n  };\n});"
+      },
+      "id": "format-record",
+      "name": "Format for Airtable",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1520, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Ideas", "mode": "name" },
+        "columns": {
+          "mappingMode": "autoMapInputData"
+        }
+      },
+      "id": "airtable-insert",
+      "name": "Insert to Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [1740, 300],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    }
+  ],
+  "connections": {
+    "Every 4h": { "main": [[{ "node": "Hashtag List", "type": "main", "index": 0 }]] },
+    "Hashtag List": { "main": [[{ "node": "Apify TikTok Scraper", "type": "main", "index": 0 }]] },
+    "Apify TikTok Scraper": { "main": [[{ "node": "Split Items", "type": "main", "index": 0 }]] },
+    "Split Items": { "main": [[{ "node": "Filter: ≥50K views", "type": "main", "index": 0 }]] },
+    "Filter: ≥50K views": { "main": [[{ "node": "Claude Score & Classify", "type": "main", "index": 0 }]] },
+    "Claude Score & Classify": { "main": [[{ "node": "Format for Airtable", "type": "main", "index": 0 }]] },
+    "Format for Airtable": { "main": [[{ "node": "Insert to Airtable", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

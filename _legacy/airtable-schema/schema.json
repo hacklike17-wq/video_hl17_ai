@@ -1,0 +1,135 @@
+{
+  "base_name": "Video AI Production",
+  "description": "Spec để tạo Airtable base. Dùng manual hoặc qua Airtable Meta API (paid plan).",
+  "tables": [
+    {
+      "name": "Ideas",
+      "primary_field": "title",
+      "fields": [
+        { "name": "title", "type": "singleLineText" },
+        { "name": "hook_text", "type": "multilineText" },
+        { "name": "source_url", "type": "url" },
+        { "name": "source_platform", "type": "singleSelect", "options": ["tiktok", "youtube", "instagram", "twitter", "manual"] },
+        { "name": "view_count", "type": "number" },
+        { "name": "posted_date", "type": "dateTime" },
+        { "name": "crawled_date", "type": "createdTime" },
+        { "name": "pillar", "type": "singleSelect", "options": ["Tech", "AI", "Productivity", "Indie Hacking", "Other"] },
+        { "name": "score", "type": "number", "description": "1-10, scored by Claude" },
+        { "name": "angle", "type": "multilineText", "description": "Suggested approach" },
+        { "name": "status", "type": "singleSelect", "options": ["Idea", "Approved", "Script Gen", "Done", "Rejected"] },
+        { "name": "btn_generate_script", "type": "button", "description": "Webhook: POST {N8N_URL}/webhook/generate-script with {recordId}" },
+        { "name": "scripts", "type": "linkToAnotherRecord", "linked_table": "Scripts" }
+      ],
+      "views": [
+        { "name": "Idea Pool", "type": "kanban", "groupBy": "status" },
+        { "name": "All Grid", "type": "grid", "sort": [{ "field": "score", "direction": "desc" }] },
+        { "name": "Top Ideas", "type": "grid", "filter": "score >= 8 AND status = 'Idea'" }
+      ]
+    },
+    {
+      "name": "Scripts",
+      "primary_field": "title",
+      "fields": [
+        { "name": "title", "type": "formula", "formula": "{idea.title} & ' v' & {version}" },
+        { "name": "idea_id", "type": "linkToAnotherRecord", "linked_table": "Ideas" },
+        { "name": "hook", "type": "multilineText" },
+        { "name": "setup", "type": "multilineText" },
+        { "name": "body", "type": "multilineText" },
+        { "name": "payoff", "type": "multilineText" },
+        { "name": "cta", "type": "multilineText" },
+        { "name": "broll_prompts", "type": "multilineText", "description": "JSON array of english queries" },
+        { "name": "version", "type": "number" },
+        { "name": "status", "type": "singleSelect", "options": ["Draft", "Pending Review", "Approved", "Rendering", "Done", "Rejected"] },
+        { "name": "created_at", "type": "createdTime" },
+        { "name": "btn_approve", "type": "button", "description": "Webhook: POST {N8N_URL}/webhook/generate-assets with {scriptId}" },
+        { "name": "btn_regenerate", "type": "button", "description": "Webhook: POST {N8N_URL}/webhook/generate-script with {recordId, regenerate: true}" },
+        { "name": "videos", "type": "linkToAnotherRecord", "linked_table": "Videos" }
+      ],
+      "views": [
+        { "name": "Pending Review", "type": "grid", "filter": "status = 'Pending Review'" },
+        { "name": "All", "type": "grid" }
+      ]
+    },
+    {
+      "name": "Videos",
+      "primary_field": "title",
+      "fields": [
+        { "name": "title", "type": "formula", "formula": "{script.title}" },
+        { "name": "script_id", "type": "linkToAnotherRecord", "linked_table": "Scripts" },
+        { "name": "argil_job_id", "type": "singleLineText", "description": "Set in workflow 03, used by callback 05 lookup" },
+        { "name": "submagic_project_id", "type": "singleLineText", "description": "Set in workflow 05 after Submagic kick-off" },
+        { "name": "voice_url", "type": "url", "description": "Cloudinary-hosted ElevenLabs MP3" },
+        { "name": "avatar_url", "type": "url", "description": "Argil-hosted MP4, populated by workflow 05" },
+        { "name": "broll_urls", "type": "multilineText", "description": "JSON array of Pexels URLs" },
+        { "name": "final_url", "type": "url", "description": "Submagic output, populated by workflow 06" },
+        { "name": "thumbnail", "type": "attachment" },
+        { "name": "duration", "type": "number" },
+        { "name": "caption", "type": "multilineText", "description": "Post caption with hashtags" },
+        { "name": "status", "type": "singleSelect", "options": ["Generating Assets", "Assembling", "Rendering", "Pending Review", "Approved", "Scheduled", "Published", "Rejected", "Argil Failed", "Submagic Failed"] },
+        { "name": "reject_reason", "type": "multilineText" },
+        { "name": "scheduled_at", "type": "dateTime" },
+        { "name": "published_at", "type": "dateTime" },
+        { "name": "platforms", "type": "multipleSelects", "options": ["TikTok", "Instagram", "YouTube Shorts"] },
+        { "name": "btn_approve", "type": "button", "description": "Webhook: POST {N8N_URL}/webhook/publish-video with {videoId}" },
+        { "name": "btn_reject", "type": "button", "description": "Update status to Rejected" }
+      ],
+      "views": [
+        { "name": "Pending Review", "type": "gallery", "filter": "status = 'Pending Review'", "thumbnail_field": "thumbnail" },
+        { "name": "Mobile Review", "type": "interface", "description": "Use Interface Designer to build mobile-optimized swipe view" },
+        { "name": "Calendar", "type": "calendar", "date_field": "scheduled_at" },
+        { "name": "Published", "type": "grid", "filter": "status = 'Published'" }
+      ]
+    },
+    {
+      "name": "BrandProfile",
+      "primary_field": "name",
+      "fields": [
+        { "name": "name", "type": "singleLineText" },
+        { "name": "voice_id_elevenlabs", "type": "singleLineText" },
+        { "name": "avatar_id_argil", "type": "singleLineText" },
+        { "name": "voice_id_argil", "type": "singleLineText" },
+        { "name": "voice_style", "type": "multilineText", "description": "Tone description for LLM prompt" },
+        { "name": "signature_phrases", "type": "multilineText" },
+        { "name": "forbidden_phrases", "type": "multilineText" },
+        { "name": "content_pillars", "type": "multilineText" },
+        { "name": "banned_topics", "type": "multilineText" },
+        { "name": "primary_color", "type": "singleLineText" },
+        { "name": "font", "type": "singleLineText" },
+        { "name": "submagic_template_id", "type": "singleLineText" },
+        { "name": "intro_clip_url", "type": "url" },
+        { "name": "outro_clip_url", "type": "url" },
+        { "name": "hook_examples", "type": "multilineText", "description": "20+ viral hooks for few-shot" },
+        { "name": "script_examples", "type": "multilineText", "description": "5 best scripts for few-shot" },
+        { "name": "default_cta", "type": "singleLineText" }
+      ],
+      "views": [{ "name": "Brands", "type": "grid" }]
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "Mobile Review",
+      "description": "Interface Designer page tối ưu cho điện thoại",
+      "elements": [
+        "Video player (link to Videos.final_url)",
+        "Title text",
+        "Pillar badge",
+        "Hook text overlay",
+        "Approve button → trigger publish webhook",
+        "Reject button → update status",
+        "Quick schedule: Now / +1h / 8PM / Custom"
+      ]
+    }
+  ],
+  "automations": [
+    {
+      "name": "Auto-trigger Asset Gen on Script Approval",
+      "trigger": "When Scripts.status changes to 'Approved'",
+      "action": "POST to {N8N_URL}/webhook/generate-assets with { scriptId: record.id }"
+    },
+    {
+      "name": "Auto-trigger Publish on Video Approval",
+      "trigger": "When Videos.status changes to 'Approved'",
+      "action": "POST to {N8N_URL}/webhook/publish-video with { videoId: record.id }"
+    }
+  ]
+}

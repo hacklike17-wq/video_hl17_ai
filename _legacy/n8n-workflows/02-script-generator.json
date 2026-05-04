@@ -1,0 +1,147 @@
+{
+  "name": "02 — Script Generator (webhook)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-script",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook (Airtable button)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Ideas", "mode": "name" },
+        "id": "={{ $json.body.recordId }}"
+      },
+      "id": "get-idea",
+      "name": "Get Idea Record",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [420, 300],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "BrandProfile", "mode": "name" },
+        "returnAll": false,
+        "limit": 1
+      },
+      "id": "get-brand",
+      "name": "Get Brand Profile",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [420, 480],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "merge",
+      "name": "Merge Idea + Brand",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [640, 380]
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-6",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=Bạn là content writer cho {{ $('Get Brand Profile').item.json.fields.name }}, chuyên viết script video TikTok/Reels < 60s tiếng Việt.\n\nTone: {{ $('Get Brand Profile').item.json.fields.voice_style }}\nSignature phrases: {{ $('Get Brand Profile').item.json.fields.signature_phrases }}\nPillars: {{ $('Get Brand Profile').item.json.fields.content_pillars }}\nBanned: {{ $('Get Brand Profile').item.json.fields.banned_topics }}\n\nHook examples (học style):\n{{ $('Get Brand Profile').item.json.fields.hook_examples }}\n\nCấu trúc 50s:\n- HOOK (0-3s, avatar)\n- SETUP (3-8s, b-roll voiceover)\n- BODY (8-35s, b-roll voiceover)\n- PAYOFF (35-50s, avatar)\n- CTA (50-55s, avatar)\n\nTrả CHỈ JSON:\n{\n  \"hook\": \"...\",\n  \"setup\": \"...\",\n  \"body\": \"...\",\n  \"payoff\": \"...\",\n  \"cta\": \"...\",\n  \"broll_prompts\": [\"english query 1\", ...]\n}\nbroll_prompts: 8-10 query tiếng Anh."
+            },
+            {
+              "role": "user",
+              "content": "=Idea:\n- Title: {{ $('Get Idea Record').item.json.fields.title }}\n- Pillar: {{ $('Get Idea Record').item.json.fields.pillar }}\n- Angle: {{ $('Get Idea Record').item.json.fields.angle }}\n- Original hook: {{ $('Get Idea Record').item.json.fields.hook_text }}\n\nViết script. Chỉ JSON."
+            }
+          ]
+        },
+        "options": { "maxTokens": 2000, "temperature": 0.7 }
+      },
+      "id": "claude-script",
+      "name": "Claude: Generate Script",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1,
+      "position": [860, 380],
+      "credentials": { "anthropicApi": { "id": "anthropic-credential", "name": "Anthropic" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.text || $input.first().json.content?.[0]?.text || '';\nconst clean = raw.replace(/^```json\\s*/, '').replace(/```\\s*$/, '').trim();\nconst parsed = JSON.parse(clean);\nreturn [{\n  json: {\n    idea_id: $('Get Idea Record').item.json.id,\n    hook: parsed.hook,\n    setup: parsed.setup,\n    body: parsed.body,\n    payoff: parsed.payoff,\n    cta: parsed.cta,\n    broll_prompts: JSON.stringify(parsed.broll_prompts),\n    status: 'Pending Review',\n    version: 1\n  }\n}];"
+      },
+      "id": "parse-json",
+      "name": "Parse Script JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 380]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Scripts", "mode": "name" },
+        "columns": { "mappingMode": "autoMapInputData" }
+      },
+      "id": "create-script",
+      "name": "Insert Script to Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [1300, 380],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": { "__rl": true, "value": "={{ $env.AIRTABLE_BASE_ID }}", "mode": "id" },
+        "table": { "__rl": true, "value": "Ideas", "mode": "name" },
+        "id": "={{ $('Get Idea Record').item.json.id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": { "status": "Script Gen" }
+        }
+      },
+      "id": "update-idea",
+      "name": "Mark Idea: Script Gen",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [1520, 380],
+      "credentials": { "airtableTokenApi": { "id": "airtable-credential", "name": "Airtable" } }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"script_id\": \"{{ $('Insert Script to Airtable').item.json.id }}\" }"
+      },
+      "id": "respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1740, 380]
+    }
+  ],
+  "connections": {
+    "Webhook (Airtable button)": { "main": [[{ "node": "Get Idea Record", "type": "main", "index": 0 }, { "node": "Get Brand Profile", "type": "main", "index": 0 }]] },
+    "Get Idea Record": { "main": [[{ "node": "Merge Idea + Brand", "type": "main", "index": 0 }]] },
+    "Get Brand Profile": { "main": [[{ "node": "Merge Idea + Brand", "type": "main", "index": 1 }]] },
+    "Merge Idea + Brand": { "main": [[{ "node": "Claude: Generate Script", "type": "main", "index": 0 }]] },
+    "Claude: Generate Script": { "main": [[{ "node": "Parse Script JSON", "type": "main", "index": 0 }]] },
+    "Parse Script JSON": { "main": [[{ "node": "Insert Script to Airtable", "type": "main", "index": 0 }]] },
+    "Insert Script to Airtable": { "main": [[{ "node": "Mark Idea: Script Gen", "type": "main", "index": 0 }]] },
+    "Mark Idea: Script Gen": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
