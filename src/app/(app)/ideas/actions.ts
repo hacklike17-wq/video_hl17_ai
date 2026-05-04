@@ -56,7 +56,7 @@ export async function createManualIdeaAction(formData: FormData): Promise<Action
     .run();
 
   revalidatePath("/ideas");
-  return { ok: true, message: "Đã tạo idea" };
+  return { ok: true, message: "Đã tạo ý tưởng" };
 }
 
 export async function crawlIdeasNowAction(): Promise<ActionResult> {
@@ -67,7 +67,7 @@ export async function crawlIdeasNowAction(): Promise<ActionResult> {
       { jobId: `crawl_${Date.now()}` },
     );
     revalidatePath("/jobs");
-    return { ok: true, message: `Đã queue job: ${job.id}` };
+    return { ok: true, message: `Đã đưa vào hàng đợi: ${job.id}` };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
@@ -80,7 +80,7 @@ export async function rescoreIdeaAction(id: string): Promise<ActionResult> {
       { type: "score-idea", data: { ideaId: id } },
       { jobId: `score_${id}_${Date.now()}` },
     );
-    return { ok: true, message: "Đã queue rescore" };
+    return { ok: true, message: "Đã yêu cầu chấm lại" };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }

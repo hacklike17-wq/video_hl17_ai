@@ -8,7 +8,7 @@ import { brandProfile } from "@/db/schema";
 
 const schema = z.object({
   id: z.string().optional(),
-  name: z.string().min(1, "Tên brand bắt buộc"),
+  name: z.string().min(1, "Tên thương hiệu bắt buộc"),
   voiceIdElevenLabs: z.string().optional(),
   voiceIdArgil: z.string().optional(),
   avatarIdArgil: z.string().optional(),

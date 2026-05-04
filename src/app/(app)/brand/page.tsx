@@ -9,10 +9,10 @@ export default async function BrandPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Brand Profile</h1>
+        <h1 className="text-2xl font-bold">Hồ sơ thương hiệu</h1>
         <p className="text-sm text-muted-foreground">
-          Cấu hình thương hiệu — voice, avatar, content pillars, hook examples. Claude sẽ dùng
-          các thông tin này khi sinh script.
+          Cấu hình giọng đọc, avatar, chủ đề chính và câu mở đầu mẫu. AI sẽ dùng các thông tin này
+          khi tạo kịch bản cho bạn.
         </p>
       </div>
       <BrandForm initial={brand} />

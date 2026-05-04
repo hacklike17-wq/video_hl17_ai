@@ -13,7 +13,7 @@ export function CrawlNowButton() {
     setMsg(null);
     start(async () => {
       const r = await crawlIdeasNowAction();
-      setMsg(r.ok ? r.message ?? "Đã queue" : `Lỗi: ${r.error}`);
+      setMsg(r.ok ? r.message ?? "Đã đưa vào hàng đợi" : `Lỗi: ${r.error}`);
       setTimeout(() => setMsg(null), 5000);
     });
   };
@@ -23,7 +23,7 @@ export function CrawlNowButton() {
       {msg && <span className="text-xs text-muted-foreground">{msg}</span>}
       <Button onClick={handle} disabled={pending} variant="outline" size="sm">
         <RefreshCw className={`h-4 w-4 ${pending ? "animate-spin" : ""}`} />
-        Crawl ngay
+        Quét ngay
       </Button>
     </div>
   );

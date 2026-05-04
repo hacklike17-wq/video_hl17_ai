@@ -17,11 +17,11 @@ const PLATFORM_ICON = {
 } as const;
 
 const NEXT_STATUS: Record<Idea["status"], { label: string; next: Idea["status"] } | null> = {
-  idea: { label: "Approve", next: "approved" },
-  approved: { label: "→ Script Gen", next: "script_gen" },
-  script_gen: { label: "Mark Done", next: "done" },
+  idea: { label: "Duyệt", next: "approved" },
+  approved: { label: "→ Tạo kịch bản", next: "script_gen" },
+  script_gen: { label: "Đánh dấu xong", next: "done" },
   done: null,
-  rejected: { label: "Restore", next: "idea" },
+  rejected: { label: "Khôi phục", next: "idea" },
 };
 
 export function IdeaCard({ idea }: { idea: Idea }) {
@@ -41,7 +41,7 @@ export function IdeaCard({ idea }: { idea: Idea }) {
     });
   };
   const remove = () => {
-    if (!confirm("Xoá idea này?")) return;
+    if (!confirm("Xoá ý tưởng này?")) return;
     startTransition(async () => {
       await deleteIdeaAction(idea.id);
     });
@@ -100,7 +100,7 @@ export function IdeaCard({ idea }: { idea: Idea }) {
             disabled={pending}
             className="h-7 text-xs"
           >
-            Reject
+            Từ chối
           </Button>
         )}
         <Button

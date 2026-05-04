@@ -14,13 +14,13 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/ideas", label: "Ideas", icon: Lightbulb },
-  { href: "/scripts", label: "Scripts", icon: ScrollText },
-  { href: "/videos", label: "Videos", icon: Video },
-  { href: "/schedule", label: "Schedule", icon: Calendar },
-  { href: "/brand", label: "Brand", icon: Sparkles },
-  { href: "/jobs", label: "Jobs", icon: ListChecks },
+  { href: "/dashboard", label: "Tổng quan", icon: LayoutDashboard },
+  { href: "/ideas", label: "Ý tưởng", icon: Lightbulb },
+  { href: "/scripts", label: "Kịch bản", icon: ScrollText },
+  { href: "/videos", label: "Video", icon: Video },
+  { href: "/schedule", label: "Lịch đăng", icon: Calendar },
+  { href: "/brand", label: "Thương hiệu", icon: Sparkles },
+  { href: "/jobs", label: "Tác vụ", icon: ListChecks },
 ];
 
 export function Sidebar() {

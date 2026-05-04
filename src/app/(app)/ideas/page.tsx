@@ -19,10 +19,10 @@ export default async function IdeasPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Ideas</h1>
+          <h1 className="text-2xl font-bold">Ý tưởng</h1>
           <p className="text-sm text-muted-foreground">
-            Mining ý tưởng từ TikTok + chấm điểm bằng Claude. Bấm <strong>Approve</strong> để chuyển
-            sang Script Gen.
+            Quét ý tưởng từ TikTok và chấm điểm bằng AI. Bấm <strong>Duyệt</strong> để chuyển sang
+            bước tạo kịch bản.
           </p>
         </div>
         <div className="flex items-center gap-2">

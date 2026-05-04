@@ -2,11 +2,11 @@ import type { Idea } from "@/db/schema";
 import { IdeaCard } from "./idea-card";
 
 const COLUMNS: { key: Idea["status"]; label: string; tint: string }[] = [
-  { key: "idea", label: "Idea", tint: "border-yellow-500/30" },
-  { key: "approved", label: "Approved", tint: "border-blue-500/30" },
-  { key: "script_gen", label: "Script Gen", tint: "border-purple-500/30" },
-  { key: "done", label: "Done", tint: "border-green-500/30" },
-  { key: "rejected", label: "Rejected", tint: "border-red-500/30" },
+  { key: "idea", label: "Ý tưởng", tint: "border-yellow-500/30" },
+  { key: "approved", label: "Đã duyệt", tint: "border-blue-500/30" },
+  { key: "script_gen", label: "Đang tạo kịch bản", tint: "border-purple-500/30" },
+  { key: "done", label: "Hoàn tất", tint: "border-green-500/30" },
+  { key: "rejected", label: "Đã từ chối", tint: "border-red-500/30" },
 ];
 
 export function KanbanBoard({ ideas }: { ideas: Idea[] }) {
@@ -40,7 +40,7 @@ export function KanbanBoard({ ideas }: { ideas: Idea[] }) {
               ))}
               {items.length === 0 && (
                 <div className="rounded-md border border-dashed border-muted-foreground/20 p-4 text-center text-xs text-muted-foreground">
-                  (trống)
+                  Chưa có
                 </div>
               )}
             </div>

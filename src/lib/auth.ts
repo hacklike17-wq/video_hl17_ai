@@ -26,7 +26,10 @@ export async function createSession(email: string) {
   const c = await cookies();
   c.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: env.NODE_ENV === "production",
+    // Only set Secure when serving over HTTPS — otherwise browsers refuse to
+    // send the cookie back on subsequent HTTP requests (server actions, RSC),
+    // causing the middleware to redirect to /login mid-session.
+    secure: env.APP_URL.startsWith("https://"),
     sameSite: "lax",
     path: "/",
     maxAge: COOKIE_MAX_AGE,

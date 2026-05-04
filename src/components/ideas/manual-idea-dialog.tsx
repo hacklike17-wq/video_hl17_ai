@@ -40,39 +40,39 @@ export function ManualIdeaDialog() {
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="h-4 w-4" />
-          Thêm idea
+          Thêm ý tưởng
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Tạo idea thủ công</DialogTitle>
+          <DialogTitle>Tạo ý tưởng thủ công</DialogTitle>
           <DialogDescription>
-            Nhập trực tiếp khi bạn không có URL nguồn hoặc muốn test pipeline.
+            Nhập trực tiếp khi không có URL nguồn hoặc muốn thử nghiệm.
           </DialogDescription>
         </DialogHeader>
         <form action={onSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">Tiêu đề *</Label>
             <Input id="title" name="title" required maxLength={200} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hookText">Hook / mô tả</Label>
+            <Label htmlFor="hookText">Câu mở đầu / mô tả</Label>
             <Textarea id="hookText" name="hookText" rows={3} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="sourceUrl">Source URL</Label>
+              <Label htmlFor="sourceUrl">URL nguồn</Label>
               <Input id="sourceUrl" name="sourceUrl" type="url" placeholder="https://..." />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sourcePlatform">Platform</Label>
+              <Label htmlFor="sourcePlatform">Nền tảng</Label>
               <select
                 id="sourcePlatform"
                 name="sourcePlatform"
                 defaultValue="manual"
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
               >
-                <option value="manual">Manual</option>
+                <option value="manual">Thủ công</option>
                 <option value="tiktok">TikTok</option>
                 <option value="youtube">YouTube</option>
                 <option value="instagram">Instagram</option>
@@ -82,12 +82,12 @@ export function ManualIdeaDialog() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="pillar">Pillar</Label>
-              <Input id="pillar" name="pillar" placeholder="Tech / AI / ..." />
+              <Label htmlFor="pillar">Chủ đề</Label>
+              <Input id="pillar" name="pillar" placeholder="Công nghệ / AI / ..." />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="angle">Angle (góc kể của brand)</Label>
+            <Label htmlFor="angle">Góc kể của thương hiệu</Label>
             <Textarea id="angle" name="angle" rows={2} />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

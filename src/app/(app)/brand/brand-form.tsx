@@ -25,30 +25,30 @@ export function BrandForm({ initial }: { initial: BrandProfile | null }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Cơ bản</CardTitle>
+          <CardTitle>Thông tin cơ bản</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field
-            label="Tên brand *"
+            label="Tên thương hiệu *"
             name="name"
             defaultValue={initial?.name ?? ""}
             placeholder="Ví dụ: HL17 AI"
             required
           />
           <Field
-            label="Màu chính (hex)"
+            label="Màu chính (mã hex)"
             name="primaryColor"
             defaultValue={initial?.primaryColor ?? "#FF6B35"}
             placeholder="#FF6B35"
           />
           <Field
-            label="Default CTA"
+            label="Lời kêu gọi mặc định"
             name="defaultCta"
             defaultValue={initial?.defaultCta ?? ""}
-            placeholder="Follow để xem thêm"
+            placeholder="Theo dõi để xem thêm"
           />
           <Field
-            label="Submagic Template ID"
+            label="Mã mẫu Submagic"
             name="submagicTemplateId"
             defaultValue={initial?.submagicTemplateId ?? ""}
           />
@@ -57,21 +57,21 @@ export function BrandForm({ initial }: { initial: BrandProfile | null }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Voice & Avatar</CardTitle>
+          <CardTitle>Giọng đọc & Avatar</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Field
-            label="ElevenLabs Voice ID"
+            label="Mã giọng ElevenLabs"
             name="voiceIdElevenLabs"
             defaultValue={initial?.voiceIdElevenLabs ?? ""}
           />
           <Field
-            label="Argil Avatar ID"
+            label="Mã avatar Argil"
             name="avatarIdArgil"
             defaultValue={initial?.avatarIdArgil ?? ""}
           />
           <Field
-            label="Argil Voice ID"
+            label="Mã giọng Argil"
             name="voiceIdArgil"
             defaultValue={initial?.voiceIdArgil ?? ""}
           />
@@ -80,49 +80,49 @@ export function BrandForm({ initial }: { initial: BrandProfile | null }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Tone & Style</CardTitle>
+          <CardTitle>Giọng văn & Phong cách</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <TextareaField
-            label="Voice style"
+            label="Phong cách giọng nói"
             name="voiceStyle"
             defaultValue={initial?.voiceStyle ?? ""}
-            placeholder="Casual, energetic Vietnamese, hơi đùa..."
+            placeholder="Thân mật, năng động, hơi hài hước..."
           />
           <TextareaField
-            label="Signature phrases"
+            label="Câu chữ ký quen dùng"
             name="signaturePhrases"
             defaultValue={initial?.signaturePhrases ?? ""}
             placeholder="Thật ra thì..., Nói thẳng nha"
           />
           <TextareaField
-            label="Content pillars"
+            label="Chủ đề chính"
             name="contentPillars"
             defaultValue={initial?.contentPillars ?? ""}
-            placeholder="Tech, AI, Productivity"
+            placeholder="Công nghệ, AI, Năng suất"
           />
           <TextareaField
-            label="Banned topics"
+            label="Chủ đề cấm"
             name="bannedTopics"
             defaultValue={initial?.bannedTopics ?? ""}
-            placeholder="Politics, Religion, Crypto"
+            placeholder="Chính trị, Tôn giáo, Crypto"
           />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Examples (cho Claude học theo)</CardTitle>
+          <CardTitle>Ví dụ (để AI học theo)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <TextareaField
-            label="Hook examples (mỗi dòng 1 hook)"
+            label="Câu mở đầu mẫu (mỗi dòng một câu)"
             name="hookExamples"
             defaultValue={initial?.hookExamples ?? ""}
             rows={8}
           />
           <TextareaField
-            label="Script examples"
+            label="Kịch bản mẫu"
             name="scriptExamples"
             defaultValue={initial?.scriptExamples ?? ""}
             rows={8}

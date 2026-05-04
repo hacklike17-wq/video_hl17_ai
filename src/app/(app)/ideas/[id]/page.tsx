@@ -26,7 +26,7 @@ export default async function IdeaDetailPage({
         href="/ideas"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ChevronLeft className="h-4 w-4" /> Quay lại Ideas
+        <ChevronLeft className="h-4 w-4" /> Quay lại danh sách
       </Link>
 
       <div>
@@ -43,8 +43,8 @@ export default async function IdeaDetailPage({
           {idea.pillar && <Badge variant="outline">{idea.pillar}</Badge>}
           <span>•</span>
           <span>{idea.sourcePlatform}</span>
-          {idea.viewCount != null && <span>• {idea.viewCount.toLocaleString()} views</span>}
-          <span>• Crawled {formatDate(idea.crawledDate ?? idea.createdAt)}</span>
+          {idea.viewCount != null && <span>• {idea.viewCount.toLocaleString()} lượt xem</span>}
+          <span>• Quét lúc {formatDate(idea.crawledDate ?? idea.createdAt)}</span>
         </div>
         {idea.sourceUrl && (
           <a
@@ -61,7 +61,7 @@ export default async function IdeaDetailPage({
       {idea.hookText && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Hook / Mô tả gốc</CardTitle>
+            <CardTitle className="text-base">Câu mở đầu / Mô tả gốc</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-wrap text-sm">{idea.hookText}</p>
@@ -72,7 +72,7 @@ export default async function IdeaDetailPage({
       {idea.angle && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Angle (do Claude đề xuất)</CardTitle>
+            <CardTitle className="text-base">Góc kể (AI đề xuất)</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-wrap text-sm">{idea.angle}</p>
@@ -83,7 +83,7 @@ export default async function IdeaDetailPage({
       {idea.rawData && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Raw data</CardTitle>
+            <CardTitle className="text-base">Dữ liệu gốc</CardTitle>
           </CardHeader>
           <CardContent>
             <pre className="overflow-x-auto rounded-md bg-muted/40 p-3 text-xs">

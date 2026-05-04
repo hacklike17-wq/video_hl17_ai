@@ -1,4 +1,4 @@
 import { Placeholder } from "@/components/shared/placeholder";
 export default function JobsPage() {
-  return <Placeholder title="Jobs" phase="Phase 4" />;
+  return <Placeholder title="Tác vụ" phase="4" />;
 }
