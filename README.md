@@ -42,17 +42,38 @@ Login với `ADMIN_EMAIL` + password vừa hash.
 
 ## Deploy lên VPS
 
+Yêu cầu: VPS có Docker + Compose, port 80/443 mở, key SSH.
+
 ```bash
 ssh root@your-vps
-git clone https://github.com/hacklike17-wq/video_hl17_ai.git video_ai
-cd video_ai
+cd /root && git clone https://github.com/hacklike17-wq/video_hl17_ai.git video-ai
+cd video-ai
 cp .env.example .env
-# sửa .env: AUTH_SECRET, ADMIN_*, API keys, APP_DOMAIN
-docker compose up -d
-docker compose exec app npm run db:migrate
+# Sửa .env: paste các giá trị (xem mục bên dưới)
+./scripts/deploy.sh
 ```
 
-Truy cập `https://your-domain` (Caddy tự cấp HTTPS).
+### Tạo các giá trị bắt buộc cho .env (chạy ở local)
+
+```bash
+openssl rand -base64 32                     # AUTH_SECRET
+openssl rand -hex 16                        # CRON_SECRET
+npm run auth:hash -- "matkhau-admin"        # ADMIN_PASSWORD_HASH
+                                            # Script in ra 2 dòng:
+                                            #   - dòng "for LOCAL dev"  → dùng cho .env local
+                                            #   - dòng "for DEPLOY"     → paste vào .env trên VPS
+```
+
+Lưu ý quan trọng: bcrypt hash chứa `$`. Trên VPS dùng escape `$$` (compose convention), local dev dùng `\$` (dotenv-expand convention). Script `auth:hash` đã in cả 2 dòng — copy đúng dòng cho môi trường của bạn.
+
+Domain: nếu có domain trỏ về IP VPS, set `APP_DOMAIN=yourdomain.com` trong .env → Caddy tự cấp HTTPS. Không có domain → set `APP_DOMAIN=:80` → chạy HTTP qua IP.
+
+### Re-deploy sau khi push code mới
+
+```bash
+ssh root@your-vps
+cd /root/video-ai && ./scripts/deploy.sh
+```
 
 ## Pipeline (sẽ build dần qua các phase)
 

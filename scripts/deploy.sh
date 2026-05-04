@@ -14,6 +14,10 @@ fi
 echo "→ Pulling latest code..."
 git pull --ff-only
 
+echo "→ Ensuring data dir + perms (container app user is uid 100)..."
+mkdir -p data
+chown -R 100:101 data
+
 echo "→ Building Docker images..."
 docker compose build
 
@@ -24,8 +28,7 @@ echo "→ Waiting for app to be ready..."
 sleep 5
 
 echo "→ Running DB migrations..."
-docker compose exec -T app sh -c "cd /app && npx tsx src/db/migrate.ts" || \
-  docker compose run --rm app sh -c "cd /app && npx tsx src/db/migrate.ts"
+docker compose run --rm app sh -c "cd /app && npx tsx src/db/migrate.ts"
 
 echo "→ Service status:"
 docker compose ps

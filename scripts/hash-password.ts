@@ -7,6 +7,10 @@ if (!password) {
 }
 
 const hash = bcrypt.hashSync(password, 12);
-const escaped = hash.replace(/\$/g, "\\$");
-console.log("\nADMIN_PASSWORD_HASH=" + escaped + "\n");
-console.log("Copy dòng trên vào file .env (đã tự escape các ký tự '$')\n");
+console.log("\n# Raw hash:");
+console.log(hash);
+console.log("\n# For LOCAL dev (.env, parsed by Next.js dotenv-expand):");
+console.log("ADMIN_PASSWORD_HASH=" + hash.replace(/\$/g, "\\$"));
+console.log("\n# For DEPLOY (.env on VPS, parsed by docker compose):");
+console.log("ADMIN_PASSWORD_HASH=" + hash.replace(/\$/g, "$$$$"));
+console.log("\nCopy dòng phù hợp với môi trường vào .env\n");
