@@ -38,4 +38,19 @@ export type GenerateScriptJob = {
   data: { ideaId: string };
 };
 
-export type IdeaJob = CrawlIdeasJob | ScoreIdeaJob | GenerateScriptJob;
+export type GenerateVoiceJob = {
+  type: "generate-voice";
+  data: { scriptId: string };
+};
+
+export type FetchBrollJob = {
+  type: "fetch-broll";
+  data: { scriptId: string };
+};
+
+export type IdeaJob =
+  | CrawlIdeasJob
+  | ScoreIdeaJob
+  | GenerateScriptJob
+  | GenerateVoiceJob
+  | FetchBrollJob;

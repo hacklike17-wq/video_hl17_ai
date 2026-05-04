@@ -4,6 +4,8 @@ import { QUEUE_NAMES, type IdeaJob } from "./queue";
 import { runCrawlIdeas } from "./crawl-ideas";
 import { runScoreIdea } from "./score-idea";
 import { runGenerateScript } from "./generate-script";
+import { runGenerateVoice } from "./generate-voice";
+import { runFetchBroll } from "./fetch-broll";
 
 const ideasWorker = new Worker<IdeaJob>(
   QUEUE_NAMES.ideas,
@@ -20,6 +22,10 @@ const ideasWorker = new Worker<IdeaJob>(
         return runScoreIdea(payload.data.ideaId);
       case "generate-script":
         return runGenerateScript(payload.data);
+      case "generate-voice":
+        return runGenerateVoice(payload.data);
+      case "fetch-broll":
+        return runFetchBroll(payload.data);
       default: {
         const _never: never = payload;
         throw new Error(`Unknown job type: ${JSON.stringify(_never)}`);

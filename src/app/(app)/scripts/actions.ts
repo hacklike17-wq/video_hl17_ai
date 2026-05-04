@@ -72,18 +72,39 @@ export async function updateScriptAction(id: string, formData: FormData): Promis
 }
 
 export async function approveScriptAction(id: string): Promise<ActionResult> {
-  // Phase 4 sẽ enqueue voice/avatar/broll jobs ở đây. Hiện chỉ chuyển status.
-  db.update(scripts).set({ status: "approved" }).where(eq(scripts.id, id)).run();
   const script = db.select().from(scripts).where(eq(scripts.id, id)).get();
-  if (script?.ideaId) {
+  if (!script) return { ok: false, error: "Không tìm thấy kịch bản" };
+
+  db.update(scripts).set({ status: "rendering" }).where(eq(scripts.id, id)).run();
+  if (script.ideaId) {
     db.update(ideas).set({ status: "done" }).where(eq(ideas.id, script.ideaId)).run();
   }
+
+  // Push 2 jobs song song: voice + b-roll
+  try {
+    await Promise.all([
+      ideasQueue.add(
+        "generate-voice",
+        { type: "generate-voice", data: { scriptId: id } },
+        { jobId: `voice_${id}_${Date.now()}` },
+      ),
+      ideasQueue.add(
+        "fetch-broll",
+        { type: "fetch-broll", data: { scriptId: id } },
+        { jobId: `broll_${id}_${Date.now()}` },
+      ),
+    ]);
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+
   revalidatePath("/scripts");
   revalidatePath(`/scripts/${id}`);
   revalidatePath("/ideas");
+  revalidatePath("/videos");
   return {
     ok: true,
-    message: "Đã duyệt. Bước tạo video tự động sẽ có ở giai đoạn 4.",
+    message: "Đã duyệt — đang tạo giọng đọc + b-roll. Theo dõi ở mục Video.",
   };
 }
 
