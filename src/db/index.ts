@@ -3,7 +3,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { mkdirSync, existsSync } from "node:fs";
 import { dirname } from "node:path";
-import { env } from "@/lib/env";
+import { env } from "../lib/env";
 import * as schema from "./schema";
 
 const dbPath = env.DATABASE_URL.replace(/^file:/, "");

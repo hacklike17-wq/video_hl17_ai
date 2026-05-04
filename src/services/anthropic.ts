@@ -1,6 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import { env } from "@/lib/env";
+import { env } from "../lib/env";
 
 let _client: Anthropic | null = null;
 

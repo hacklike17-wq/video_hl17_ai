@@ -1,5 +1,5 @@
 import "server-only";
-import { env } from "@/lib/env";
+import { env } from "../lib/env";
 
 const BASE = "https://api.apify.com/v2";
 

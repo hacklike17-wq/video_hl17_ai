@@ -1,7 +1,7 @@
-import { db } from "@/db";
-import { brandProfile, ideas, jobsLog } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { runTikTokScraper, tiktokItemToIdea } from "@/services/apify";
+import { db } from "../db";
+import { brandProfile, ideas, jobsLog } from "../db/schema";
+import { runTikTokScraper, tiktokItemToIdea } from "../services/apify";
 import { ideasQueue } from "./queue";
 
 export async function runCrawlIdeas(opts: { brandId?: string; limit?: number }) {

@@ -1,7 +1,7 @@
-import { db } from "@/db";
-import { brandProfile, ideas, jobsLog } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { scoreIdea } from "@/services/anthropic";
+import { db } from "../db";
+import { brandProfile, ideas, jobsLog } from "../db/schema";
+import { scoreIdea } from "../services/anthropic";
 
 export async function runScoreIdea(ideaId: string) {
   const started = Date.now();
