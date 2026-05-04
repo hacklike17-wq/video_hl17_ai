@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { scripts, ideas } from "@/db/schema";
 import { ideasQueue } from "@/jobs/queue";
+import { resetVideoAssets } from "@/jobs/_video-helpers";
 
 export type ActionResult = { ok: boolean; error?: string; message?: string; data?: unknown };
 
@@ -80,7 +81,8 @@ export async function approveScriptAction(id: string): Promise<ActionResult> {
     db.update(ideas).set({ status: "done" }).where(eq(ideas.id, script.ideaId)).run();
   }
 
-  // Push 2 jobs song song: voice + b-roll
+  // Reset video record about to be (re)generated, then push 2 jobs song song
+  resetVideoAssets(id);
   try {
     await Promise.all([
       ideasQueue.add(

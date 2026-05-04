@@ -3,7 +3,7 @@ import { db } from "../db";
 import { brandProfile, ideas, jobsLog, scripts, videos } from "../db/schema";
 import { generateVoiceMp3, joinScriptForTTS } from "../services/elevenlabs";
 import { uploadAudio } from "../services/cloudinary";
-import { getOrCreateVideoForScript, tryMarkAssetsReady } from "./_video-helpers";
+import { ensureVideoForScript, tryMarkAssetsReady } from "./_video-helpers";
 
 export async function runGenerateVoice(opts: { scriptId: string }) {
   const started = Date.now();
@@ -40,7 +40,7 @@ export async function runGenerateVoice(opts: { scriptId: string }) {
       cta: script.cta,
     });
 
-    const videoId = getOrCreateVideoForScript(script.id);
+    const videoId = ensureVideoForScript(script.id);
 
     const mp3 = await generateVoiceMp3({ text, voiceId });
     const filename = `${(idea?.title ?? "voice").slice(0, 40).replace(/[^\w]+/g, "_")}_v${script.version}.mp3`;

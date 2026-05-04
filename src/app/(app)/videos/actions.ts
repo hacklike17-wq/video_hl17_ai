@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { ideas, scripts, videos } from "@/db/schema";
 import { ideasQueue } from "@/jobs/queue";
+import { resetVideoAssets } from "@/jobs/_video-helpers";
 
 export type ActionResult = { ok: boolean; error?: string; message?: string };
 
@@ -22,15 +23,7 @@ export async function regenerateAssetsAction(id: string): Promise<ActionResult> 
   const v = db.select().from(videos).where(eq(videos.id, id)).get();
   if (!v) return { ok: false, error: "Không tìm thấy video" };
 
-  db.update(videos)
-    .set({
-      status: "generating_assets",
-      voiceUrl: null,
-      brollUrls: null,
-      rejectReason: null,
-    })
-    .where(eq(videos.id, id))
-    .run();
+  resetVideoAssets(v.scriptId);
 
   try {
     await Promise.all([

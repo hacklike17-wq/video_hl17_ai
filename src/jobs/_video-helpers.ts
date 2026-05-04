@@ -1,11 +1,30 @@
-import { sql, eq, and, isNotNull } from "drizzle-orm";
+import { eq, and, isNotNull } from "drizzle-orm";
 import { db } from "../db";
 import { videos } from "../db/schema";
 
 /**
- * Tạo (hoặc reset) record video cho 1 script. Status mặc định = generating_assets.
+ * Đảm bảo có 1 record video cho script. KHÔNG reset bất kỳ field nào nếu đã tồn tại
+ * — để các job song song (voice + broll) không ghi đè kết quả của nhau.
+ *
+ * Chỉ caller duyệt kịch bản (approveScriptAction) hoặc người dùng "Tạo lại"
+ * mới nên gọi resetVideoAssets() để xoá field cũ.
  */
-export function getOrCreateVideoForScript(scriptId: string) {
+export function ensureVideoForScript(scriptId: string) {
+  const existing = db.select().from(videos).where(eq(videos.scriptId, scriptId)).get();
+  if (existing) return existing.id;
+  const inserted = db
+    .insert(videos)
+    .values({ scriptId, status: "generating_assets" })
+    .returning({ id: videos.id })
+    .get();
+  return inserted.id;
+}
+
+/**
+ * Reset toàn bộ asset của video về trạng thái generating_assets.
+ * Dùng khi user duyệt kịch bản hoặc bấm "Tạo lại tài nguyên".
+ */
+export function resetVideoAssets(scriptId: string) {
   const existing = db.select().from(videos).where(eq(videos.scriptId, scriptId)).get();
   if (existing) {
     db.update(videos)

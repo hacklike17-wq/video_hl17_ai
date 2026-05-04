@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db";
 import { jobsLog, scripts, videos } from "../db/schema";
 import { pickBestPortraitFile, searchPortraitVideos } from "../services/pexels";
-import { getOrCreateVideoForScript, tryMarkAssetsReady } from "./_video-helpers";
+import { ensureVideoForScript, tryMarkAssetsReady } from "./_video-helpers";
 
 export async function runFetchBroll(opts: { scriptId: string }) {
   const started = Date.now();
@@ -26,7 +26,7 @@ export async function runFetchBroll(opts: { scriptId: string }) {
       throw new Error("Kịch bản không có b-roll prompts.");
     }
 
-    const videoId = getOrCreateVideoForScript(script.id);
+    const videoId = ensureVideoForScript(script.id);
 
     const urls: string[] = [];
     const failed: string[] = [];
